@@ -2,11 +2,11 @@
   "name": "shield-study-rappor",
   "version": "1.0.0",
   "description": "RAPPOR as a Shield Study",
-  "main": "index.js",
-  "engines" : {
-    "node" : ">=8.0"
+  "main": "addon/bootstrap.js",
+  "engines": {
+    "firefox": ">=45.0 <=*"
   },
-  "engineStrict" : true,
+  "engineStrict": true,
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "export XPI=\"shield-study-name.xpi\" | bash ./bin/xpi.sh",
