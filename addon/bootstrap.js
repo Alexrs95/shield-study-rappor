@@ -88,7 +88,7 @@ async function startup(addonData, reason) {
   console.log(`info ${JSON.stringify(studyUtils.info())}`);
   // studyUtils.endStudy("user-disable");
   let eLTDHomepages = getHomepage();
-  let report = TelemetryRappor.createReport("name", eLTDHomepages);
+  let report = TelemetryRappor.createReport(studyUtils.studyName, eLTDHomepages);
   console.log(report);
 }
 
