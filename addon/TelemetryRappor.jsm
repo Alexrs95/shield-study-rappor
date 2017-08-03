@@ -18,7 +18,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 const console = new ConsoleAPI({prefix: "shield-study-rappor"});
 
-var bytesFromOctetString = str => new Uint8Array([for (i of str) str.charCodeAt(i)]);
+var bytesFromOctetString = str => new Uint8Array([for (i of str) i.charCodeAt(0)]);
 
 var bytesToHex = bytes => [for (b of bytes) ("0" + b.toString(16)).slice(-2)].join("");
 
@@ -118,19 +118,22 @@ function bf_random(rand, k, p) {
 function bf_signal(v, k, h, cohort) {
     let b = new Uint8Array(k);
     let data = bytesFromUTF8(v);
-    for (let n = 0; n < h; ++n) {
-        let hash = Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
+    let hash = Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
+    for (let n = 0; n < h; n++) {
+        console.log("n is", n);
         hash.init(Ci.nsICryptoHash.SHA256);
         // Seed the hash function with the cohort and the hash function number. Since we
         // are using a strong hash function we can get away with using [0..k] as seed
         // instead of using actually different hash functions.
-        let seed = bytesFromOctetString(cohort + " " + n);
+        let seed = bytesFromOctetString(cohort + "" + n);
         hash.update(seed, seed.length);
         hash.update(data, data.length);
         let result = hash.finish(false);
+        console.log("seed is", cohort + "" + n, "=", seed);
         // The last 2 bytes of the result as the bit index is sufficient for bloom filters
         // of up to 65536 bytes in length.
         let idx = result.charCodeAt(result.length - 1) | (result.charCodeAt(result.length - 2) << 8);
+        console.log("idx is", idx);
         // Set the corresponding bit in the bloom filter.
         setBit(b, idx % (k<<3));
     }
@@ -177,7 +180,19 @@ function create_report(v, k, h, cohort, f, secret, name, p, q) {
 
 var TelemetryRappor = {
 
-    createReport: function(name, v, k = 16, h = 2, cohorts = 128, f = 0.5, p = 0.5, q = 0.75) {
+    /*
+     * createReport receives the parameters for RAPPOR and returns the IRR.
+     * params:
+     *  - name: name of the experiment. Used to store the preferences.
+     *  - v: value to submit
+     *  - k (optional, default 4): size of the bloom filter in bytes.
+     *  - h (optional, default 2): number of hash functions
+     *  - cohorts (optional, default 128): number of cohorts to use
+     *  - f (optional, default 0.5): value for probability f.
+     *  - p (optional, default 0.5): value for probability p
+     *  - q (optional, default 0.75): value for probability q
+     */
+    createReport: function(name, v, k = 4, h = 3, cohorts = 128, f = 0.5, p = 0.5, q = 0.75) {
         // Retrieve (and generate if necessary) the RAPPOR secret. This secret
         // never leaves the client.
         let secret = null;
@@ -207,6 +222,7 @@ var TelemetryRappor = {
             console.log(e);
         }
         if (cohort === null) {
+            // TODO: Is this random secure enough? Do we need a secure random to select the cohort?
             cohort = Math.floor(Math.random() * cohorts);
             Services.prefs.setIntPref(PREF_RAPPOR_PATH + name + ".cohort", cohort);
         }

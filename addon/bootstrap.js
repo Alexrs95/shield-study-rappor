@@ -153,8 +153,16 @@ async function chooseVariation() {
 function getHomepage(){
   // get the homepage of the user
   var homepage = Services.prefs.getComplexValue(PREF_HOMEPAGE, Ci.nsIPrefLocalizedString).data;
+  console.log("homepage is", homepage);
   // transform the homepage into a nsIURI. Neccesary to get the base domain
-  var homepageURI = Services.netUtils.newURI(homepage);
+  var homepageURI;
+  // TODO: FIX PROBLEM WITH MALFORMED URIS (google.es/)
+  try {
+    var homepageURI = Services.netUtils.newURI(homepage);
+    console.log("uri is ", homepageURI);
+  } catch (e) {
+    console.log("exception", e);
+  }
 
   var eTLD;
   if (homepage.startsWith("about:")) {
@@ -165,8 +173,10 @@ function getHomepage(){
       eTLD = Services.eTLD.getBaseDomain(homepageURI);
     } catch (e) {
       // getBaseDomain will fail if the host is an IP address or is empty
+      console.log("exception getting base domain", e);
       eTLD = homepage;
     }
   }
+  console.log("eTLD is", eTLD);
   return eTLD;
 }
