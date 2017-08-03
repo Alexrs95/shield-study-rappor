@@ -23,19 +23,41 @@ var bytesFromOctetString = str => new Uint8Array([for (i of str) i.charCodeAt(0)
 var bytesToHex = bytes => [for (b of bytes) ("0" + b.toString(16)).slice(-2)].join("");
 
 // Set a bit in a byte array (bloom filters are represented as byte arrays).
-var setBit = (byteArray, n) => byteArray[n>>3] |= (1 << (n&7));
+var setBit = (byteArray, n) => byteArray[n>>3] |= (1 << (n & 7));
 
 // Return true if a bit is set in the byte array.
-var getBit = (byteArray, n) => !!(byteArray[n>>3] & (1 << (n&7)));
+var getBit = (byteArray, n) => !!(byteArray[n >> 3] & (1 << (n & 7)));
 
 // Or two bloom filters.
-var bf_or = (a, b) => new Uint8Array([for (i of a) a[i] | b[i]]);
+//var bf_or = (a, b) => new Uint8Array([for (i of a) a[i] | b[i]]);
+
+function bf_or(a, b) {
+    let array = new Uint8Array(a.length);
+    for (var i = 0; i < array.length; i++) {
+        array[i] =  a[i] | b[i];
+    }
+    return array;
+}
 
 // And two bloom filters.
-var bf_and = (a, b) => new Uint8Array([for (i of a) a[i] & b[i]]);
+//var bf_and = (a, b) => new Uint8Array([for (i of a) a[i] & b[i]]);
+function bf_and(a, b) {
+    let array = new Uint8Array(a.length);
+    for (var i = 0; i < array.length; i++) {
+        array[i] =  a[i] & b[i];
+    }
+    return array;
+}
 
 // Merge two bloom filters using a mask.
-var bf_mask = (mask, lhs, rhs) => new Uint8Array([for (i of mask) (lhs[i] & ~mask[i]) | (rhs[i] & mask[i])]);
+//var bf_mask = (mask, lhs, rhs) => new Uint8Array([for (i of mask) (lhs[i] & ~mask[i]) | (rhs[i] & mask[i])]);
+function bf_mask(mask, lhs, rhs) {
+    let array = new Uint8Array(mask.length);
+    for (var i = 0; i < array.length; i++) {
+        array[i] = (lhs[i] & ~mask[i]) | (rhs[i] & mask[i]);
+    }
+    return array;
+}
 
 // Get actually random bytes.
 function getRandomBytes(length) {
@@ -102,7 +124,7 @@ function makePRNG(seed) {
 function bf_random(rand, k, p) {
     if (p === 0.5) {
         let r = rand(k);
-        return new Uint8Array([for (i of r) r[i]]);
+        return new Uint8Array(r);
     }
     let b = bf_random(rand, k, 0.5);
     let b2 = bf_random(rand, k, 0.5);
@@ -120,7 +142,6 @@ function bf_signal(v, k, h, cohort) {
     let data = bytesFromUTF8(v);
     let hash = Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
     for (let n = 0; n < h; n++) {
-        console.log("n is", n);
         hash.init(Ci.nsICryptoHash.SHA256);
         // Seed the hash function with the cohort and the hash function number. Since we
         // are using a strong hash function we can get away with using [0..k] as seed
@@ -129,12 +150,11 @@ function bf_signal(v, k, h, cohort) {
         hash.update(seed, seed.length);
         hash.update(data, data.length);
         let result = hash.finish(false);
-        console.log("seed is", cohort + "" + n, "=", seed);
         // The last 2 bytes of the result as the bit index is sufficient for bloom filters
         // of up to 65536 bytes in length.
         let idx = result.charCodeAt(result.length - 1) | (result.charCodeAt(result.length - 2) << 8);
-        console.log("idx is", idx);
-        // Set the corresponding bit in the bloom filter.
+        // Set the corresponding bit in the bloom filter. Shift 3 bits to select the index, as k is
+        // represented in bytes, we need to shift 3 bits to get the correspondign bit (1 byte = 8 bits = 2^3).
         setBit(b, idx % (k<<3));
     }
     return b;
@@ -151,6 +171,7 @@ function bf_prr(b, f, secret, name) {
     let prng = makePRNG(secret + "\0" + name + "\0" + bytesToHex(b));
     let fake_bits = bf_random(prng, k, f/2);
     let fake_mask = bf_random(prng, k, 1-f);
+    console.log("fake_bits", fake_bits, "fake_mask", fake_mask);
     // For every '0' in fake_mask use the original data, for every '1' use the
     // fake data.
     return bf_mask(fake_mask, b, fake_bits);
@@ -192,7 +213,7 @@ var TelemetryRappor = {
      *  - p (optional, default 0.5): value for probability p
      *  - q (optional, default 0.75): value for probability q
      */
-    createReport: function(name, v, k = 4, h = 3, cohorts = 128, f = 0.5, p = 0.5, q = 0.75) {
+    createReport: function(name, v, k = 4, h = 2, cohorts = 128, f = 0.5, p = 0.5, q = 0.75) {
         // Retrieve (and generate if necessary) the RAPPOR secret. This secret
         // never leaves the client.
         let secret = null;
