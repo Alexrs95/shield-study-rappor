@@ -56,13 +56,6 @@ function mask(mask, lhs, rhs) {
     return array;
 }
 
-// Get actually random bytes.
-function getRandomBytes(length) {
-    let rng = Cc["@mozilla.org/security/random-generator;1"]
-    .createInstance(Ci.nsIRandomGenerator);
-    return rng.generateRandomBytes(length);
-}
-
 // Get the byte representation of an UTF-8 string.
 function bytesFromUTF8(str) {
     let conv =
@@ -173,15 +166,55 @@ function compute_prr(b, f, secret, name) {
     return mask(fake_mask, b, fake_bits);
 }
 
+
 // Create an instanteneous randomized response, based on the previously generated
-// permanent randomized response b_, and using the probabilities p and q (zero
-// and one coin respectively).
-function compute_irr(b_, p, q) {
-    // Generate biased coin flips for each bit.
-    let k = b_.length;
-    let zero_coins = bf_random(getRandomBytes, k, p);
-    let one_coins = bf_random(getRandomBytes, k, q);
-    return mask(b_, zero_coins, one_coins);
+// permanent randomized response prr, and using the probabilities p and q
+// If PRR bit is 0, IRR bit is 1 with probability p.
+// If PRR bit is 1, IRR bit is 1 with probability q.
+function compute_irr(irr, p, q) {
+    let k = irr.length;
+    let p_gen = get_bloom_bits(p, k);
+    let g_gen = get_bloom_bits(p, k);
+    return mask(irr, p_gen, g_gen);
+}
+
+function get_bloom_bits(prob, k) {
+    // Create an array of k bytes
+    let arr = new Uint8Array(k);
+    // Calculate the number of bits in the array
+    let max = k * 8;
+    // Iterate over each bit in the array
+    for (var i = 0; i < max; i++) {
+        // Check whether a random number is higher or not than the given probability
+        let bit = getRandomFloat() < prob;
+        // Calculate the index of the bit to set. This must be done because
+        // we have to set individual bits to one or zero, but what we have are bytes.
+        let idx = Math.floor(i/8);
+        // Set the corresponding bit in the bloom filter to its value. We're using here
+        // the boolean 'bit' as an int (1 if true, 0 if false).
+        arr[idx] |= (bit << (i % 8));
+    }
+    return arr;
+}
+
+function getRandomFloat() {
+    // From: https://stackoverflow.com/a/34577886. TODO: Check if it's secure.
+    // A buffer with just the right size to convert to Float64
+    var buffer = new ArrayBuffer(8);
+
+    // View it as an Int8Array and fill it with 8 random ints
+    var ints = new Int8Array(buffer);
+    crypto.getRandomValues(ints);
+
+    // Set the sign (ints[7][7]) to 0 and the
+    // exponent (ints[7][6]-[6][5]) to just the right size
+    // (all ones except for the highest bit)
+    ints[7] = 63;
+    ints[6] |= 0xf0;
+
+    // Now view it as a Float64Array, and read the one float from it
+    var float = new Float64Array(buffer)[0] - 1;
+    return float;
 }
 
 // Create a report. Instead of storing a permanent randomized response, we use
@@ -189,8 +222,8 @@ function compute_irr(b_, p, q) {
 // a report.
 function create_report(v, k, h, cohort, f, secret, name, p, q) {
     let b = encode(v, k, h, cohort);
-    let b_ = compute_prr(b, f, secret, name);
-    return compute_irr(b_, p, q);
+    let prr = compute_prr(b, f, secret, name);
+    return compute_irr(prr, p, q);
 }
 
 var TelemetryRappor = {
@@ -260,7 +293,6 @@ var TelemetryRappor = {
         compute_prr: compute_prr,
         bf_random: bf_random,
         encode: encode,
-        getRandomBytes: getRandomBytes,
         bytesFromUTF8: bytesFromUTF8,
         makeHMACKey: makeHMACKey,
         makeHMACHasher: makeHMACHasher,

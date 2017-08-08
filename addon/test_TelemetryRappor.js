@@ -132,18 +132,6 @@ function test_getBit_false() {
     return !TelemetryRappor.internal.getBit(byteArray, n) === expected;
 }
 
-
-function test_bf_random() {
-    let b = new Uint8Array([1, 3, 7, 0]);
-    let rand = TelemetryRappor.internal.makePRNG("secret" + "\0" + "name" + "\0"
-                                        + TelemetryRappor.internal.bytesToHex(b));
-    let k = b.length;
-    let p = 0.5;
-    let expected;
-    //console.log(TelemetryRappor.internal.bf_random(rand, k, p) === expected);
-
-}
-
 function test_encode_equals() {
     let v = "hello";
     let k = 4;
@@ -176,7 +164,7 @@ function test_compute_prr_not_equals() {
     let f = 0.5;
     let secret = "secret";
     let name = "name";
-    let expected = new Uint8Array([[ 156, 24, 0, 193 ]]);
+    let expected = new Uint8Array([156, 24, 0, 193]);
     return !equals(TelemetryRappor.internal.compute_prr(b, f, secret, name), expected);
 }
 
