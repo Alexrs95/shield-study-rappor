@@ -15,6 +15,7 @@ const PREF_RAPPOR_SECRET = PREF_RAPPOR_PATH + "secret";
 
 Cu.import("resource://gre/modules/Console.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.importGlobalProperties(['crypto']);
 
 const console = new ConsoleAPI({prefix: "shield-study-rappor"});
 
@@ -219,7 +220,9 @@ var TelemetryRappor = {
         }
 
         if (secret === null) {
-            secret = bytesToHex(getRandomBytes(32));
+            let randomArray = new Uint8Array(32);
+            crypto.getRandomValues(randomArray);
+            secret = bytesToHex(randomArray);
             Services.prefs.setCharPref(PREF_RAPPOR_SECRET, secret);
         }
 
