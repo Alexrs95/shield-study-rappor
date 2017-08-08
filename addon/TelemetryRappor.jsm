@@ -29,8 +29,6 @@ var setBit = (byteArray, n) => byteArray[n>>3] |= (1 << (n & 7));
 var getBit = (byteArray, n) => !!(byteArray[n >> 3] & (1 << (n & 7)));
 
 // Or two bloom filters.
-//var bf_or = (a, b) => new Uint8Array([for (i of a) a[i] | b[i]]);
-
 function bf_or(a, b) {
     let array = new Uint8Array(a.length);
     for (var i = 0; i < array.length; i++) {
@@ -40,7 +38,6 @@ function bf_or(a, b) {
 }
 
 // And two bloom filters.
-//var bf_and = (a, b) => new Uint8Array([for (i of a) a[i] & b[i]]);
 function bf_and(a, b) {
     let array = new Uint8Array(a.length);
     for (var i = 0; i < array.length; i++) {
@@ -50,7 +47,6 @@ function bf_and(a, b) {
 }
 
 // Merge two bloom filters using a mask.
-//var bf_mask = (mask, lhs, rhs) => new Uint8Array([for (i of mask) (lhs[i] & ~mask[i]) | (rhs[i] & mask[i])]);
 function bf_mask(mask, lhs, rhs) {
     let array = new Uint8Array(mask.length);
     for (var i = 0; i < array.length; i++) {
@@ -110,12 +106,12 @@ function makePRNG(seed) {
     let i = 0;
     let previous = "";
     return function (length) {
-    let result = "";
-    while (result.length < length) {
-        previous = digest(h, previous + String.fromCharCode(++i));
-        result += previous;
-    }
-    return bytesFromOctetString(result.substr(0, length));
+        let result = "";
+        while (result.length < length) {
+            previous = digest(h, previous + String.fromCharCode(++i));
+            result += previous;
+        }
+        return bytesFromOctetString(result.substr(0, length));
     };
 }
 
@@ -171,7 +167,6 @@ function bf_prr(b, f, secret, name) {
     let prng = makePRNG(secret + "\0" + name + "\0" + bytesToHex(b));
     let fake_bits = bf_random(prng, k, f/2);
     let fake_mask = bf_random(prng, k, 1-f);
-    console.log("fake_bits", fake_bits, "fake_mask", fake_mask);
     // For every '0' in fake_mask use the original data, for every '1' use the
     // fake data.
     return bf_mask(fake_mask, b, fake_bits);
@@ -193,9 +188,7 @@ function bf_irr(b_, p, q) {
 // a report.
 function create_report(v, k, h, cohort, f, secret, name, p, q) {
     let b = bf_signal(v, k, h, cohort);
-    console.log("original b", bytesToHex(b));
     let b_ = bf_prr(b, f, secret, name);
-    console.log("prr", bytesToHex(b_));
     return bf_irr(b_, p, q);
 }
 
@@ -213,12 +206,11 @@ var TelemetryRappor = {
      *  - p (optional, default 0.5): value for probability p
      *  - q (optional, default 0.75): value for probability q
      */
-    createReport: function(name, v, k = 4, h = 2, cohorts = 128, f = 0.5, p = 0.5, q = 0.75) {
+    createReport: function(name, v, k = 10, h = 2, cohorts = 200, f = 0.5, p = 0.25, q = 0.75) {
         // Retrieve (and generate if necessary) the RAPPOR secret. This secret
         // never leaves the client.
         let secret = null;
          try {
-            console.log("try Secret");
             secret = Services.prefs.getCharPref(PREF_RAPPOR_SECRET);
             if (secret.length != 64) {
                 secret = null;
@@ -231,14 +223,12 @@ var TelemetryRappor = {
             secret = bytesToHex(getRandomBytes(32));
             Services.prefs.setCharPref(PREF_RAPPOR_SECRET, secret);
         }
-        console.log("secret is", secret);
 
         // If we haven't self-selected a cohort yet for this measurement,
         // then do so now, otherwise retrieve the cohort.
         let cohort = null;
         try {
             cohort = Services.prefs.getIntPref(PREF_RAPPOR_PATH + name + ".cohort");
-            console.log("obtaining cohort from prefs");
         } catch (e) {
             console.log(e);
         }
@@ -247,7 +237,6 @@ var TelemetryRappor = {
             cohort = Math.floor(Math.random() * cohorts);
             Services.prefs.setIntPref(PREF_RAPPOR_PATH + name + ".cohort", cohort);
         }
-        console.log("cohort is", cohort);
 
         Services.prefs.setCharPref(PREF_RAPPOR_PATH + name + ".value", v);
         return {
@@ -263,7 +252,7 @@ var TelemetryRappor = {
         setBit: setBit,
         getBit: getBit,
         bf_or: bf_or,
-        br_and: bf_and,
+        bf_and: bf_and,
         bf_mask: bf_mask,
         bf_irr: bf_irr,
         bf_prr: bf_prr,
