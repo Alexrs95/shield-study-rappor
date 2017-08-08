@@ -29,7 +29,7 @@ var setBit = (byteArray, n) => byteArray[n>>3] |= (1 << (n & 7));
 var getBit = (byteArray, n) => !!(byteArray[n >> 3] & (1 << (n & 7)));
 
 // Or two bloom filters.
-function bf_or(a, b) {
+function or(a, b) {
     let array = new Uint8Array(a.length);
     for (var i = 0; i < array.length; i++) {
         array[i] =  a[i] | b[i];
@@ -38,7 +38,7 @@ function bf_or(a, b) {
 }
 
 // And two bloom filters.
-function bf_and(a, b) {
+function and(a, b) {
     let array = new Uint8Array(a.length);
     for (var i = 0; i < array.length; i++) {
         array[i] =  a[i] & b[i];
@@ -47,7 +47,7 @@ function bf_and(a, b) {
 }
 
 // Merge two bloom filters using a mask.
-function bf_mask(mask, lhs, rhs) {
+function mask(mask, lhs, rhs) {
     let array = new Uint8Array(mask.length);
     for (var i = 0; i < array.length; i++) {
         array[i] = (lhs[i] & ~mask[i]) | (rhs[i] & mask[i]);
@@ -125,15 +125,15 @@ function bf_random(rand, k, p) {
     let b = bf_random(rand, k, 0.5);
     let b2 = bf_random(rand, k, 0.5);
     if (p === 0.25)
-        return bf_and(b, b2);
+        return and(b, b2);
     if (p === 0.75)
-        return bf_or(b, b2);
+        return or(b, b2);
     throw new Error("Unsupported probability: " + p);
 }
 
 // Hash client’s value v (string) onto the Bloom filter B of size k (in bytes) using
 // h hash functions and the given cohort.
-function bf_signal(v, k, h, cohort) {
+function encode(v, k, h, cohort) {
     let b = new Uint8Array(k);
     let data = bytesFromUTF8(v);
     let hash = Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
@@ -158,7 +158,7 @@ function bf_signal(v, k, h, cohort) {
 
 // Create the permanent randomized response B' for the given real data B, using the
 // longitudinal privacy guarantee f.
-function bf_prr(b, f, secret, name) {
+function compute_prr(b, f, secret, name) {
     let k = b.length;
     // As Chrome we diverge from the paper a bit and don't actually randomly
     // generate the fake data here. Instead we use a permanently stored
@@ -169,31 +169,30 @@ function bf_prr(b, f, secret, name) {
     let fake_mask = bf_random(prng, k, 1-f);
     // For every '0' in fake_mask use the original data, for every '1' use the
     // fake data.
-    return bf_mask(fake_mask, b, fake_bits);
+    return mask(fake_mask, b, fake_bits);
 }
 
 // Create an instanteneous randomized response, based on the previously generated
 // permanent randomized response b_, and using the probabilities p and q (zero
 // and one coin respectively).
-function bf_irr(b_, p, q) {
+function compute_irr(b_, p, q) {
     // Generate biased coin flips for each bit.
     let k = b_.length;
     let zero_coins = bf_random(getRandomBytes, k, p);
     let one_coins = bf_random(getRandomBytes, k, q);
-    return bf_mask(b_, zero_coins, one_coins);
+    return mask(b_, zero_coins, one_coins);
 }
 
 // Create a report. Instead of storing a permanent randomized response, we use
 // a PRNG and a stored secret to re-compute B' on the fly every time we send
 // a report.
 function create_report(v, k, h, cohort, f, secret, name, p, q) {
-    let b = bf_signal(v, k, h, cohort);
-    let b_ = bf_prr(b, f, secret, name);
-    return bf_irr(b_, p, q);
+    let b = encode(v, k, h, cohort);
+    let b_ = compute_prr(b, f, secret, name);
+    return compute_irr(b_, p, q);
 }
 
 var TelemetryRappor = {
-
     /*
      * createReport receives the parameters for RAPPOR and returns the IRR.
      * params:
@@ -206,7 +205,7 @@ var TelemetryRappor = {
      *  - p (optional, default 0.5): value for probability p
      *  - q (optional, default 0.75): value for probability q
      */
-    createReport: function(name, v, k = 10, h = 2, cohorts = 200, f = 0.5, p = 0.25, q = 0.75) {
+    createReport: function(name, v, k = 2, h = 2, cohorts = 200, f = 0.5, p = 0.25, q = 0.75) {
         // Retrieve (and generate if necessary) the RAPPOR secret. This secret
         // never leaves the client.
         let secret = null;
@@ -251,13 +250,13 @@ var TelemetryRappor = {
         bytesToHex: bytesToHex,
         setBit: setBit,
         getBit: getBit,
-        bf_or: bf_or,
-        bf_and: bf_and,
-        bf_mask: bf_mask,
-        bf_irr: bf_irr,
-        bf_prr: bf_prr,
+        or: or,
+        and: and,
+        mask: mask,
+        compute_irr: compute_irr,
+        compute_prr: compute_prr,
         bf_random: bf_random,
-        bf_signal: bf_signal,
+        encode: encode,
         getRandomBytes: getRandomBytes,
         bytesFromUTF8: bytesFromUTF8,
         makeHMACKey: makeHMACKey,

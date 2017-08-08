@@ -17,52 +17,52 @@ function equals(array1, array2){
     return true;
 }
 
-function test_bf_or_equals() {
+function test_or_equals() {
     let a = new Uint8Array([1, 0, 1, 0]);
     let b = new Uint8Array([0, 1, 0 ,1]);
     let expected = new Uint8Array([1, 1, 1, 1]);
 
-    return equals(TelemetryRappor.internal.bf_or(a, b), expected);
+    return equals(TelemetryRappor.internal.or(a, b), expected);
 }
 
-function test_bf_and_equals() {
+function test_and_equals() {
     let a = new Uint8Array([1, 0, 1, 1]);
     let b = new Uint8Array([1, 1, 0 , 1]);
     let expected = new Uint8Array([1, 0, 0, 1]);
 
-    return equals(TelemetryRappor.internal.bf_and(a, b), expected);
+    return equals(TelemetryRappor.internal.and(a, b), expected);
 }
 
-function test_bf_or_not_equals() {
+function test_or_not_equals() {
     let a = new Uint8Array([1, 0, 1, 0]);
     let b = new Uint8Array([0, 1, 0 ,1]);
     let expected = new Uint8Array([1, 0, 1, 1]);
 
-    return !equals(TelemetryRappor.internal.bf_or(a, b), expected);
+    return !equals(TelemetryRappor.internal.or(a, b), expected);
 }
 
-function test_bf_and_not_equals() {
+function test_and_not_equals() {
     let a = new Uint8Array([1, 0, 1, 1]);
     let b = new Uint8Array([1, 1, 0 , 1]);
     let expected = new Uint8Array([1, 0, 1, 1]);
 
-    return !equals(TelemetryRappor.internal.bf_and(a, b), expected);
+    return !equals(TelemetryRappor.internal.and(a, b), expected);
 }
 
-function test_bf_mask_equals() {
+function test_mask_equals() {
     let mask = new Uint8Array([7, 7, 7, 7]);
     let lhs = new Uint8Array([7, 3, 3, 7]);
     let rhs = new Uint8Array([1, 7, 1, 1]);
     let expected = new Uint8Array([1, 7, 1, 1]);
-    return equals(TelemetryRappor.internal.bf_mask(mask, lhs, rhs), expected);
+    return equals(TelemetryRappor.internal.mask(mask, lhs, rhs), expected);
 }
 
-function test_bf_mask_not_equals() {
+function test_mask_not_equals() {
     let mask = new Uint8Array([7, 7, 7, 7]);
     let lhs = new Uint8Array([7, 3, 3, 7]);
     let rhs = new Uint8Array([7, 7, 1, 1]);
     let expected = new Uint8Array([1, 7, 1, 1]);
-    return !equals(TelemetryRappor.internal.bf_mask(mask, lhs, rhs), expected);
+    return !equals(TelemetryRappor.internal.mask(mask, lhs, rhs), expected);
 }
 
 function test_bytesFromOctetString_equals() {
@@ -144,60 +144,60 @@ function test_bf_random() {
 
 }
 
-function test_bf_signal_equals() {
+function test_encode_equals() {
     let v = "hello";
     let k = 4;
     let h = 2;
     let cohort = 10;
     let expected = new Uint8Array([ 4, 0, 0, 1 ]);
-    return equals(TelemetryRappor.internal.bf_signal(v, k, h, cohort), expected);
+    return equals(TelemetryRappor.internal.encode(v, k, h, cohort), expected);
 }
 
-function test_bf_signal_not_equals() {
+function test_encode_not_equals() {
     let v = "hello";
     let k = 4;
     let h = 2;
     let cohort = 11;
     let expected = new Uint8Array([ 4, 0, 0, 1 ]);
-    return !equals(TelemetryRappor.internal.bf_signal(v, k, h, cohort), expected);
+    return !equals(TelemetryRappor.internal.encode(v, k, h, cohort), expected);
 }
 
-function test_bf_prr_equals() {
+function test_compute_prr_equals() {
     let b = new Uint8Array([ 4, 0, 0, 1 ]);
     let f = 0.5;
     let secret = "secret";
     let name = "name";
     let expected = new Uint8Array([[ 156, 24, 0, 193 ]]);
-    return equals(TelemetryRappor.internal.bf_prr(b, f, secret, name), expected);
+    return equals(TelemetryRappor.internal.compute_prr(b, f, secret, name), expected);
 }
 
-function test_bf_prr_not_equals() {
+function test_compute_prr_not_equals() {
     let b = new Uint8Array([ 4, 0, 1, 1 ]);
     let f = 0.5;
     let secret = "secret";
     let name = "name";
     let expected = new Uint8Array([[ 156, 24, 0, 193 ]]);
-    return !equals(TelemetryRappor.internal.bf_prr(b, f, secret, name), expected);
+    return !equals(TelemetryRappor.internal.compute_prr(b, f, secret, name), expected);
 }
 
-function test_bf_irr() {
+function test_compute_irr() {
     let b_;
     let p;
     let q;
     let expected;
-    //console.log(TelemetryRappor.internal.bf_irr(b_, p, q) === expected);
+    //console.log(TelemetryRappor.internal.compute_irr(b_, p, q) === expected);
 }
 
 function run(){
     print("--- Running tests... ---");
 
     print("– Test bloom filter or:");
-    print("\t test_bf_or_true:", test_bf_or_true());
-    print("\t test_bf_or_false:", test_bf_or_false());
+    print("\t test_or_true:", test_or_true());
+    print("\t test_or_false:", test_or_false());
 
     print("– Test bloom filter and:");
-    print("\t test_bf_and_true:", test_bf_and_true());
-    print("\t test_bf_and_false:", test_bf_and_false());
+    print("\t test_and_true:", test_and_true());
+    print("\t test_and_false:", test_and_false());
 
     print("– Test bytes from string:");
     print("\t", test_bytesFromOctetString_true());
