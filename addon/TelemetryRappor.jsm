@@ -150,22 +150,45 @@ function encode(v, k, h, cohort) {
     return b;
 }
 
-// Create the permanent randomized response B' for the given real data B, using the
-// longitudinal privacy guarantee f.
 function compute_prr(b, f, secret, name) {
+    // Uniform bits are 1 with probability 1/2, and f_mask bits are 1 with
+    // probability f.  So in the expression below:
+    //   - Bits in (uniform & f_mask) are 1 with probability f/2.
+    //   - (bloom_bits & ~f_mask) clears a bloom filter bit with probability
+    //     f, so we get B_i with probability 1-f.
+    //   - The remaining bits are 0, with remaining probability f/2.
     let k = b.length;
-    // As Chrome we diverge from the paper a bit and don't actually randomly
-    // generate the fake data here. Instead we use a permanently stored
-    // secret (string), the name of the metric (string), and the data itself
-    // to feed a PRNG.
+    let uniform = new Uint8Array(k);
+    let f_mask = new Uint8Array(k);
+    // Calculate the number of bits in the array
+    let bits = k * 8;
+    // the value of threshold128 is the maxium value for which the byte from the digest
+    // is true (1) or false (0) in the bloom filter.
+    let threshold128 = f * 128;
     let prng = makePRNG(secret + "\0" + name + "\0" + bytesToHex(b));
-    let fake_bits = bf_random(prng, k, f/2);
-    let fake_mask = bf_random(prng, k, 1-f);
-    // For every '0' in fake_mask use the original data, for every '1' use the
-    // fake data.
-    return mask(fake_mask, b, fake_bits);
-}
+    // Get a digest with the same length as the number of bits in the bloom filter.
+    let digest_bytes = prng(bits);
+    for (var i = 0; i < bits; i++) {
+        // Calculate the index of the bit to set. This must be done because
+        // we have to set individual bits to one or zero, but what we have are bytes.
+        let idx = Math.floor(i/8);
 
+        // u_bit is true (1) if is odd. False if even. Then, probability of
+        // being 1 is 1/2
+        let u_bit = digest_bytes[i] & 0x01; // 1 bit of entropy
+        uniform[idx] |= (u_bit << i % 8);
+
+        // digest_bytes[i] is a byte, with range 0 - 255. 
+        // we need a number between 0 and 127, so the last
+        // bit of digest_bytes[i] is discarded.
+        let rand128 = digest_bytes[i] >> 1; // 7 bits of entropy
+        // Check if the value is less than the maxium value for which
+        // the byte from the digest is true.
+        let noise_bit = (rand128 < threshold128);
+        f_mask[idx] |= (noise_bit << i % 8);
+    }
+    return mask(f_mask, b, uniform);
+}
 
 // Create an instanteneous randomized response, based on the previously generated
 // permanent randomized response prr, and using the probabilities p and q
@@ -182,9 +205,9 @@ function get_bloom_bits(prob, k) {
     // Create an array of k bytes
     let arr = new Uint8Array(k);
     // Calculate the number of bits in the array
-    let max = k * 8;
+    let bits = k * 8;
     // Iterate over each bit in the array
-    for (var i = 0; i < max; i++) {
+    for (var i = 0; i < bits; i++) {
         // Check whether a random number is higher or not than the given probability
         let bit = getRandomFloat() < prob;
         // Calculate the index of the bit to set. This must be done because
@@ -223,7 +246,8 @@ function getRandomFloat() {
 function create_report(v, k, h, cohort, f, secret, name, p, q) {
     let b = encode(v, k, h, cohort);
     let prr = compute_prr(b, f, secret, name);
-    return compute_irr(prr, p, q);
+    let irr = compute_irr(prr, p, q);
+    return irr;
 }
 
 var TelemetryRappor = {
