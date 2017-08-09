@@ -29,24 +29,6 @@ var setBit = (byteArray, n) => byteArray[n>>3] |= (1 << (n & 7));
 // Return true if a bit is set in the byte array.
 var getBit = (byteArray, n) => !!(byteArray[n >> 3] & (1 << (n & 7)));
 
-// Or two bloom filters.
-function or(a, b) {
-    let array = new Uint8Array(a.length);
-    for (var i = 0; i < array.length; i++) {
-        array[i] =  a[i] | b[i];
-    }
-    return array;
-}
-
-// And two bloom filters.
-function and(a, b) {
-    let array = new Uint8Array(a.length);
-    for (var i = 0; i < array.length; i++) {
-        array[i] =  a[i] & b[i];
-    }
-    return array;
-}
-
 // Merge two bloom filters using a mask.
 function mask(mask, lhs, rhs) {
     let array = new Uint8Array(mask.length);
@@ -109,22 +91,6 @@ function makePRNG(seed) {
     };
 }
 
-// Get a bloom filter with P(1) = {0.25, 0.5, 0.75}. We only support these specific
-// probabilities because they can be calculated using fast bit math.
-function bf_random(rand, k, p) {
-    if (p === 0.5) {
-        let r = rand(k);
-        return new Uint8Array(r);
-    }
-    let b = bf_random(rand, k, 0.5);
-    let b2 = bf_random(rand, k, 0.5);
-    if (p === 0.25)
-        return and(b, b2);
-    if (p === 0.75)
-        return or(b, b2);
-    throw new Error("Unsupported probability: " + p);
-}
-
 // Hash client’s value v (string) onto the Bloom filter B of size k (in bytes) using
 // h hash functions and the given cohort.
 function encode(v, k, h, cohort) {
@@ -168,7 +134,7 @@ function compute_prr(b, f, secret, name) {
     let prng = makePRNG(secret + "\0" + name + "\0" + bytesToHex(b));
     // Get a digest with the same length as the number of bits in the bloom filter.
     let digest_bytes = prng(bits);
-    for (var i = 0; i < bits; i++) {
+    for (let i = 0; i < bits; i++) {
         // Calculate the index of the bit to set. This must be done because
         // we have to set individual bits to one or zero, but what we have are bytes.
         let idx = Math.floor(i/8);
@@ -202,12 +168,10 @@ function compute_irr(irr, p, q) {
 }
 
 function get_bloom_bits(prob, k) {
-    // Create an array of k bytes
     let arr = new Uint8Array(k);
     // Calculate the number of bits in the array
     let bits = k * 8;
-    // Iterate over each bit in the array
-    for (var i = 0; i < bits; i++) {
+    for (let i = 0; i < bits; i++) {
         // Check whether a random number is higher or not than the given probability
         let bit = getRandomFloat() < prob;
         // Calculate the index of the bit to set. This must be done because
@@ -310,12 +274,9 @@ var TelemetryRappor = {
         bytesToHex: bytesToHex,
         setBit: setBit,
         getBit: getBit,
-        or: or,
-        and: and,
         mask: mask,
         compute_irr: compute_irr,
         compute_prr: compute_prr,
-        bf_random: bf_random,
         encode: encode,
         bytesFromUTF8: bytesFromUTF8,
         makeHMACKey: makeHMACKey,

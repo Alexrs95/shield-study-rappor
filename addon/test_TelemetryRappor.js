@@ -17,38 +17,6 @@ function equals(array1, array2){
     return true;
 }
 
-function test_or_equals() {
-    let a = new Uint8Array([1, 0, 1, 0]);
-    let b = new Uint8Array([0, 1, 0 ,1]);
-    let expected = new Uint8Array([1, 1, 1, 1]);
-
-    return equals(TelemetryRappor.internal.or(a, b), expected);
-}
-
-function test_and_equals() {
-    let a = new Uint8Array([1, 0, 1, 1]);
-    let b = new Uint8Array([1, 1, 0 , 1]);
-    let expected = new Uint8Array([1, 0, 0, 1]);
-
-    return equals(TelemetryRappor.internal.and(a, b), expected);
-}
-
-function test_or_not_equals() {
-    let a = new Uint8Array([1, 0, 1, 0]);
-    let b = new Uint8Array([0, 1, 0 ,1]);
-    let expected = new Uint8Array([1, 0, 1, 1]);
-
-    return !equals(TelemetryRappor.internal.or(a, b), expected);
-}
-
-function test_and_not_equals() {
-    let a = new Uint8Array([1, 0, 1, 1]);
-    let b = new Uint8Array([1, 1, 0 , 1]);
-    let expected = new Uint8Array([1, 0, 1, 1]);
-
-    return !equals(TelemetryRappor.internal.and(a, b), expected);
-}
-
 function test_mask_equals() {
     let mask = new Uint8Array([7, 7, 7, 7]);
     let lhs = new Uint8Array([7, 3, 3, 7]);
