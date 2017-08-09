@@ -118,25 +118,25 @@ function test_encode_not_equals() {
     return !equals(TelemetryRappor.internal.encode(v, k, h, cohort), expected);
 }
 
-function test_compute_prr_equals() {
+function test_prr_equals() {
     let b = new Uint8Array([ 4, 0, 0, 1 ]);
     let f = 0.5;
     let secret = "secret";
     let name = "name";
     let expected = new Uint8Array([[ 156, 24, 0, 193 ]]);
-    return equals(TelemetryRappor.internal.compute_prr(b, f, secret, name), expected);
+    return equals(TelemetryRappor.internal.prr(b, f, secret, name), expected);
 }
 
-function test_compute_prr_not_equals() {
+function test_prr_not_equals() {
     let b = new Uint8Array([ 4, 0, 1, 1 ]);
     let f = 0.5;
     let secret = "secret";
     let name = "name";
     let expected = new Uint8Array([156, 24, 0, 193]);
-    return !equals(TelemetryRappor.internal.compute_prr(b, f, secret, name), expected);
+    return !equals(TelemetryRappor.internal.prr(b, f, secret, name), expected);
 }
 
-function test_compute_irr() {
+function irr() {
     let b_;
     let p;
     let q;

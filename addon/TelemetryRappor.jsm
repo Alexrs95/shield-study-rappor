@@ -116,7 +116,7 @@ function encode(v, k, h, cohort) {
     return b;
 }
 
-function compute_prr(b, f, secret, name) {
+function prr(b, f, secret, name) {
     // Uniform bits are 1 with probability 1/2, and f_mask bits are 1 with
     // probability f.  So in the expression below:
     //   - Bits in (uniform & f_mask) are 1 with probability f/2.
@@ -160,14 +160,14 @@ function compute_prr(b, f, secret, name) {
 // permanent randomized response prr, and using the probabilities p and q
 // If PRR bit is 0, IRR bit is 1 with probability p.
 // If PRR bit is 1, IRR bit is 1 with probability q.
-function compute_irr(irr, p, q) {
+function irr(irr, p, q) {
     let k = irr.length;
-    let p_gen = get_bloom_bits(p, k);
-    let g_gen = get_bloom_bits(p, k);
+    let p_gen = getBloomBits(p, k);
+    let g_gen = getBloomBits(p, k);
     return mask(irr, p_gen, g_gen);
 }
 
-function get_bloom_bits(prob, k) {
+function getBloomBits(prob, k) {
     let arr = new Uint8Array(k);
     // Calculate the number of bits in the array
     let bits = k * 8;
@@ -207,10 +207,10 @@ function getRandomFloat() {
 // Create a report. Instead of storing a permanent randomized response, we use
 // a PRNG and a stored secret to re-compute B' on the fly every time we send
 // a report.
-function create_report(v, k, h, cohort, f, secret, name, p, q) {
+function createReport(v, k, h, cohort, f, secret, name, p, q) {
     let b = encode(v, k, h, cohort);
-    let prr = compute_prr(b, f, secret, name);
-    let irr = compute_irr(prr, p, q);
+    let prr = prr(b, f, secret, name);
+    let irr = irr(prr, p, q);
     return irr;
 }
 
@@ -264,7 +264,7 @@ var TelemetryRappor = {
         Services.prefs.setCharPref(PREF_RAPPOR_PATH + name + ".value", v);
         return {
             cohort: cohort,
-            report: bytesToHex(create_report(v, k, h, cohort, f, secret, name, p, q)),
+            report: bytesToHex(createReport(v, k, h, cohort, f, secret, name, p, q)),
         };
     },
 
@@ -275,14 +275,14 @@ var TelemetryRappor = {
         setBit: setBit,
         getBit: getBit,
         mask: mask,
-        compute_irr: compute_irr,
-        compute_prr: compute_prr,
+        irr: irr,
+        prr: prr,
         encode: encode,
         bytesFromUTF8: bytesFromUTF8,
         makeHMACKey: makeHMACKey,
         makeHMACHasher: makeHMACHasher,
         digest: digest,
         makePRNG: makePRNG,
-        create_report: create_report, 
+        createReport: createReport, 
     },
 };
