@@ -116,7 +116,7 @@ function encode(v, k, h, cohort) {
     return b;
 }
 
-function prr(b, f, secret, name) {
+function getPRR(b, f, secret, name) {
     // Uniform bits are 1 with probability 1/2, and f_mask bits are 1 with
     // probability f.  So in the expression below:
     //   - Bits in (uniform & f_mask) are 1 with probability f/2.
@@ -157,10 +157,10 @@ function prr(b, f, secret, name) {
 }
 
 // Create an instanteneous randomized response, based on the previously generated
-// permanent randomized response prr, and using the probabilities p and q
+// permanent randomized response computePrr, and using the probabilities p and q
 // If PRR bit is 0, IRR bit is 1 with probability p.
 // If PRR bit is 1, IRR bit is 1 with probability q.
-function irr(irr, p, q) {
+function getIRR(irr, p, q) {
     let k = irr.length;
     let p_gen = getBloomBits(p, k);
     let g_gen = getBloomBits(p, k);
@@ -209,8 +209,8 @@ function getRandomFloat() {
 // a report.
 function createReport(v, k, h, cohort, f, secret, name, p, q) {
     let b = encode(v, k, h, cohort);
-    let prr = prr(b, f, secret, name);
-    let irr = irr(prr, p, q);
+    let prr = getPRR(b, f, secret, name);
+    let irr = getIRR(prr, p, q);
     return irr;
 }
 
@@ -275,8 +275,8 @@ var TelemetryRappor = {
         setBit: setBit,
         getBit: getBit,
         mask: mask,
-        irr: irr,
-        prr: prr,
+        getIRR: getIRR,
+        getPRR: getPRR,
         encode: encode,
         bytesFromUTF8: bytesFromUTF8,
         makeHMACKey: makeHMACKey,

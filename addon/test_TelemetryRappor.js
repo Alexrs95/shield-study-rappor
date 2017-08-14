@@ -124,16 +124,16 @@ function test_prr_equals() {
     let secret = "secret";
     let name = "name";
     let expected = new Uint8Array([[ 156, 24, 0, 193 ]]);
-    return equals(TelemetryRappor.internal.prr(b, f, secret, name), expected);
+    return equals(TelemetryRappor.internal.getPRR(b, f, secret, name), expected);
 }
-
+u
 function test_prr_not_equals() {
     let b = new Uint8Array([ 4, 0, 1, 1 ]);
     let f = 0.5;
     let secret = "secret";
     let name = "name";
     let expected = new Uint8Array([156, 24, 0, 193]);
-    return !equals(TelemetryRappor.internal.prr(b, f, secret, name), expected);
+    return !equals(TelemetryRappor.internal.getPRR(b, f, secret, name), expected);
 }
 
 function irr() {

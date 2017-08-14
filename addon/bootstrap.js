@@ -94,6 +94,11 @@ async function startup(addonData, reason) {
   let eLTDHomepages = getHomepage();
   let report = TelemetryRappor.createReport(studyUtils.studyName, eLTDHomepages);
   console.log(report);
+  studyUtils.telemetry({
+    cohort: report.cohort.toString(),
+    report: report.report
+  });
+  studyUtils.endStudy({reason: "done"});
 }
 
 function unload() {
@@ -150,6 +155,7 @@ async function chooseVariation() {
     const hashFraction = await sample.hashFraction(studyConfig.studyName + clientId, 12);
     toSet = sample.chooseWeighted(studyConfig.weightedVariations, hashFraction);
   }
+
   log.debug(`variation: ${toSet} source:${source}`);
   return toSet;
 }
