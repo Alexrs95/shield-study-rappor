@@ -91,6 +91,7 @@ async function startup(addonData, reason) {
   console.log(`info ${JSON.stringify(studyUtils.info())}`);
   // get the homepage and run RAPPOR
   let eLTDHomepages = getHomepage();
+  if (eLTDHomepages == null) { studyUtils.endStudy({reason: "incorrect homepage"}); }
   let rappor = TelemetryRappor.createReport(studyUtils.studyName, eLTDHomepages);
 
   // Send RAPPOR response to Telemetry
@@ -147,9 +148,8 @@ function getHomepage(){
   try {
     homepage = Services.prefs.getComplexValue(PREF_HOMEPAGE, Ci.nsIPrefLocalizedString).data;
   } catch (e) {
-    // TODO: value for the homepage?
-    homepage = "";
     console.error("Error obtaining the homepage: ", e);
+    return null;
   }
   // transform the homepage into a nsIURI. Neccesary to get the base domain
   var homepageURI;
