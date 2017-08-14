@@ -43,6 +43,7 @@ const REASONS = {
   ADDON_UPGRADE: 7,    // The add-on is being upgraded.
   ADDON_DOWNGRADE: 8,  // The add-on is being downgraded.
 };
+
 for (const r in REASONS) { REASONS[REASONS[r]] = r; }
 
 // jsm loader / unloader
@@ -155,16 +156,20 @@ async function chooseVariation() {
 
 function getHomepage(){
   // get the homepage of the user
-  var homepage = Services.prefs.getComplexValue(PREF_HOMEPAGE, Ci.nsIPrefLocalizedString).data;
-  console.log("homepage is", homepage);
+  var homepage;
+  try {
+    homepage = Services.prefs.getComplexValue(PREF_HOMEPAGE, Ci.nsIPrefLocalizedString).data;
+  } catch (e) {
+    homepage = "";
+    console.error("Error obtaining the homepage: ", e);
+  }
   // transform the homepage into a nsIURI. Neccesary to get the base domain
   var homepageURI;
   // TODO: FIX PROBLEM WITH MALFORMED URIS (google.es/)
   try {
-    var homepageURI = Services.netUtils.newURI(homepage);
-    console.log("uri is ", homepageURI);
+    homepageURI = Services.netUtils.newURI(homepage);
   } catch (e) {
-    console.log("exception", e);
+    console.error("Error creating URI from homepage string: ", e);
   }
 
   var eTLD;
@@ -176,10 +181,9 @@ function getHomepage(){
       eTLD = Services.eTLD.getBaseDomain(homepageURI);
     } catch (e) {
       // getBaseDomain will fail if the host is an IP address or is empty
-      console.log("exception getting base domain", e);
+      console.error("Error getting base domain: ", e);
       eTLD = homepage;
     }
   }
-  console.log("eTLD is", eTLD);
   return eTLD;
 }
