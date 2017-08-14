@@ -73,7 +73,7 @@ async function startup(addonData, reason) {
     telemetry: studyConfig.telemetry,
   });
   studyUtils.setLoggingLevel(config.log.studyUtils.level);
-  const variation = await chooseVariation();
+  const variation = studyConfig.variation;
   studyUtils.setVariation(variation);
 
   if ((REASONS[reason]) === "ADDON_INSTALL") {
@@ -139,25 +139,6 @@ function createLog(name, levelWord) {
   L.addAppender(new Log.ConsoleAppender(new Log.BasicFormatter()));
   L.level = Log.Level[levelWord] || Log.Level.Debug; // should be a config / pref
   return L;
-}
-
-async function chooseVariation() {
-  let toSet, source;
-  const sample = studyUtils.sample;
-
-  if (studyConfig.variation) {
-    source = "startup-config";
-    toSet = studyConfig.variation;
-  } else {
-    source = "weightedVariation";
-    // this is the standard arm choosing method
-    const clientId = await studyUtils.getTelemetryId();
-    const hashFraction = await sample.hashFraction(studyConfig.studyName + clientId, 12);
-    toSet = sample.chooseWeighted(studyConfig.weightedVariations, hashFraction);
-  }
-
-  log.debug(`variation: ${toSet} source:${source}`);
-  return toSet;
 }
 
 function getHomepage(){

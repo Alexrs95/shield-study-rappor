@@ -11,7 +11,6 @@ const {interfaces: Ci, classes: Cc, utils: Cu} = Components;
 const EXPORTED_SYMBOLS = ["TelemetryRappor"];
 
 const PREF_RAPPOR_PATH = "toolkit.telemetry.rappor.";
-const PREF_RAPPOR_SECRET = PREF_RAPPOR_PATH + "secret";
 
 Cu.import("resource://gre/modules/Console.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -139,12 +138,12 @@ function getPRR(b, f, secret, name) {
         // we have to set individual bits to one or zero, but what we have are bytes.
         let idx = Math.floor(i/8);
 
-        // u_bit is true (1) if is odd. False if even. Then, probability of
+        // u_bit is true (1) if it's odd. False if even. Then, probability of
         // being 1 is 1/2
         let u_bit = digest_bytes[i] & 0x01; // 1 bit of entropy
         uniform[idx] |= (u_bit << i % 8);
 
-        // digest_bytes[i] is a byte, with range 0 - 255. 
+        // digest_bytes[i] is a byte, with range 0 - 255.
         // we need a number between 0 and 127, so the last
         // bit of digest_bytes[i] is discarded.
         let rand128 = digest_bytes[i] >> 1; // 7 bits of entropy
@@ -219,14 +218,14 @@ var TelemetryRappor = {
      * params:
      *  - name: name of the experiment. Used to store the preferences.
      *  - v: value to submit
-     *  - k (optional, default 4): size of the bloom filter in bytes.
+     *  - k (optional, default 16): size of the bloom filter in bytes.
      *  - h (optional, default 2): number of hash functions
-     *  - cohorts (optional, default 128): number of cohorts to use
-     *  - f (optional, default 0.5): value for probability f.
-     *  - p (optional, default 0.5): value for probability p
-     *  - q (optional, default 0.75): value for probability q
+     *  - cohorts (optional, default 100): number of cohorts to use
+     *  - f (optional, default 0.0): value for probability f.
+     *  - p (optional, default 0.35): value for probability p
+     *  - q (optional, default 0.65): value for probability q
      */
-    createReport: function(name, v, k = 2, h = 2, cohorts = 200, f = 0.5, p = 0.25, q = 0.75) {
+    createReport: function(name, v, k = 16, h = 2, cohorts = 100, f = 0.0, p = 0.35, q = 0.65) {
         // Retrieve (and generate if necessary) the RAPPOR secret. This secret
         // never leaves the client.
         let randomArray = new Uint8Array(32);
