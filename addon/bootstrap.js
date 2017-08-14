@@ -69,7 +69,10 @@ async function startup(addonData, reason) {
   studyUtils.setup({
     studyName: studyConfig.studyName,
     endings: studyConfig.endings,
-    addon: { id: addonData.id, version: addonData.version },
+    addon: {
+      id: addonData.id,
+      version: addonData.version
+      },
     telemetry: studyConfig.telemetry,
   });
   studyUtils.setLoggingLevel(config.log.studyUtils.level);

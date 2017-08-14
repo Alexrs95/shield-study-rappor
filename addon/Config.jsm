@@ -21,6 +21,9 @@ var EXPORTED_SYMBOLS = ["config"];
 var config = {
   "study": {
     "studyName": "TelemetryRAPPOR", // no spaces, for all the reasons
+    "variation": {
+      "name": "eTLD+1",
+    },
     /** **endings**
       * - keys indicate the 'endStudy' even that opens these.
       * - urls should be static (data) or external, because they have to
