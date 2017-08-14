@@ -19,7 +19,7 @@ const console = new ConsoleAPI({prefix: "shield-study-rappor"});
 
 Cu.import("resource://gre/modules/Services.jsm");
 
-const log = createLog(studyConfig.studyName, config.log.bootstrap.level);  // defined below.
+const log = createLog(studyConfig.studyName, config.log.bootstrap.level);
 
 const STUDYUTILSPATH = `${__SCRIPT_URI_SPEC__}/../${studyConfig.studyUtilsPath}`;
 const { studyUtils } = Cu.import(STUDYUTILSPATH, {});
@@ -60,7 +60,6 @@ class Jsm {
 }
 
 async function startup(addonData, reason) {
-  // addonData: Array [ "id", "version", "installPath", "resourceURI", "instanceID", "webExtension" ]  bootstrap.js:48
   Jsm.import(config.modules);
 
   studyUtils.setup({
@@ -90,10 +89,11 @@ async function startup(addonData, reason) {
   await studyUtils.startup({reason});
 
   console.log(`info ${JSON.stringify(studyUtils.info())}`);
-  // studyUtils.endStudy("user-disable");
+  // get the homepage and run RAPPOR
   let eLTDHomepages = getHomepage();
   let rappor = TelemetryRappor.createReport(studyUtils.studyName, eLTDHomepages);
-  console.log(rappor);
+
+  // Send RAPPOR response to Telemetry
   studyUtils.telemetry({
     cohort: rappor.cohort.toString(),
     report: rappor.report
@@ -147,6 +147,7 @@ function getHomepage(){
   try {
     homepage = Services.prefs.getComplexValue(PREF_HOMEPAGE, Ci.nsIPrefLocalizedString).data;
   } catch (e) {
+    // TODO: value for the homepage?
     homepage = "";
     console.error("Error obtaining the homepage: ", e);
   }

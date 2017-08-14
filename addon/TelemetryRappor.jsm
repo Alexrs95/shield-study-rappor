@@ -226,7 +226,7 @@ var TelemetryRappor = {
      *  - q (optional, default 0.65): value for probability q
      */
     createReport: function(name, v, k = 16, h = 2, cohorts = 100, f = 0.0, p = 0.35, q = 0.65) {
-        // Retrieve (and generate if necessary) the RAPPOR secret. This secret
+        // Generate the RAPPOR secret. This secret
         // never leaves the client.
         let randomArray = new Uint8Array(32);
         crypto.getRandomValues(randomArray);
