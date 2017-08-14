@@ -11,6 +11,7 @@ const {interfaces: Ci, classes: Cc, utils: Cu} = Components;
 const EXPORTED_SYMBOLS = ["TelemetryRappor"];
 
 const PREF_RAPPOR_PATH = "toolkit.telemetry.rappor.";
+const PREF_RAPPOR_SECRET = PREF_RAPPOR_PATH + "secret";
 
 Cu.import("resource://gre/modules/Console.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -228,9 +229,21 @@ var TelemetryRappor = {
     createReport: function(name, v, k = 16, h = 2, cohorts = 100, f = 0.0, p = 0.35, q = 0.65) {
         // Generate the RAPPOR secret. This secret
         // never leaves the client.
-        let randomArray = new Uint8Array(32);
-        crypto.getRandomValues(randomArray);
-        let secret = bytesToHex(randomArray);
+        let secret = null;
+        try {
+            secret = Services.prefs.getCharPref(PREF_RAPPOR_SECRET);
+            if (secret.length != 64) {
+                secret = null;
+            }
+        } catch (e) {
+            console.log("Error getting secret from prefs", e);
+        }
+        if (secret === null) {
+            let randomArray = new Uint8Array(32);
+            crypto.getRandomValues(randomArray);
+            secret = bytesToHex(randomArray);
+            Services.prefs.setCharPref(PREF_RAPPOR_SECRET, secret); 
+        }
 
         // If we haven't self-selected a cohort yet for this measurement,
         // then do so now, otherwise retrieve the cohort.
@@ -241,8 +254,7 @@ var TelemetryRappor = {
             console.log(e);
         }
         if (cohort === null) {
-            // TODO: Is this random secure enough? Do we need a secure random to select the cohort?
-            cohort = Math.floor(Math.random() * cohorts);
+            cohort = Math.floor(getRandomFloat() * cohorts);
             Services.prefs.setIntPref(PREF_RAPPOR_PATH + name + ".cohort", cohort);
         }
 
