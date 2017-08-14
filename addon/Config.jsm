@@ -21,14 +21,6 @@ var EXPORTED_SYMBOLS = ["config"];
 var config = {
   "study": {
     "studyName": "TelemetryRAPPOR", // no spaces, for all the reasons
-    "weightedVariations": [
-      {"name": "control",
-        "weight": 1},
-      {"name": "kittens",
-        "weight": 1.5},
-      {"name": "puppers",
-        "weight": 2},  // we want more puppers in our sample
-    ],
     /** **endings**
       * - keys indicate the 'endStudy' even that opens these.
       * - urls should be static (data) or external, because they have to
