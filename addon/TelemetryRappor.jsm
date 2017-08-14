@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. 
  */
- 
+
 "use strict";
 
 const {interfaces: Ci, classes: Cc, utils: Cu} = Components;
@@ -185,7 +185,6 @@ function getBloomBits(prob, k) {
 }
 
 function getRandomFloat() {
-    // From: https://stackoverflow.com/a/34577886. TODO: Check if it's secure.
     // A buffer with just the right size to convert to Float64
     var buffer = new ArrayBuffer(8);
 
@@ -230,22 +229,9 @@ var TelemetryRappor = {
     createReport: function(name, v, k = 2, h = 2, cohorts = 200, f = 0.5, p = 0.25, q = 0.75) {
         // Retrieve (and generate if necessary) the RAPPOR secret. This secret
         // never leaves the client.
-        let secret = null;
-         try {
-            secret = Services.prefs.getCharPref(PREF_RAPPOR_SECRET);
-            if (secret.length != 64) {
-                secret = null;
-            }
-        } catch (e) {
-            console.log("catch secret exceptiom", e);
-        }
-
-        if (secret === null) {
-            let randomArray = new Uint8Array(32);
-            crypto.getRandomValues(randomArray);
-            secret = bytesToHex(randomArray);
-            Services.prefs.setCharPref(PREF_RAPPOR_SECRET, secret);
-        }
+        let randomArray = new Uint8Array(32);
+        crypto.getRandomValues(randomArray);
+        let secret = bytesToHex(randomArray);
 
         // If we haven't self-selected a cohort yet for this measurement,
         // then do so now, otherwise retrieve the cohort.
@@ -261,7 +247,6 @@ var TelemetryRappor = {
             Services.prefs.setIntPref(PREF_RAPPOR_PATH + name + ".cohort", cohort);
         }
 
-        Services.prefs.setCharPref(PREF_RAPPOR_PATH + name + ".value", v);
         return {
             cohort: cohort,
             report: bytesToHex(createReport(v, k, h, cohort, f, secret, name, p, q)),

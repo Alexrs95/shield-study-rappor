@@ -24,6 +24,7 @@ var config = {
     "variation": {
       "name": "eTLD+1",
     },
+
     /** **endings**
       * - keys indicate the 'endStudy' even that opens these.
       * - urls should be static (data) or external, because they have to
@@ -34,33 +35,29 @@ var config = {
     "endings": {
       /** standard endings */
       "user-disable": {
-        "baseUrl": "data:,You uninstalled",
+        "baseUrl": null,
       },
       "ineligible": {
-        "baseUrl": "http://www.example.com/?reason=ineligible",
+        "baseUrl": null,
       },
       "expired": {
-        "baseUrl": "http://www.example.com/?reason=expired",
-      },
-      /** User defined endings */
-      "too-popular": {
-        // data uri made using `datauri-cli`
-        "baseUrl": "data:text/html;base64,PGh0bWw+CiAgPGJvZHk+CiAgICA8cD5Zb3UgYXJlIHVzaW5nIHRoaXMgZmVhdHVyZSA8c3Ryb25nPlNPIE1VQ0g8L3N0cm9uZz4gdGhhdCB3ZSBrbm93IHlvdSBsb3ZlIGl0IQogICAgPC9wPgogICAgPHA+VGhlIEV4cGVyaW1lbnQgaXMgb3ZlciBhbmQgd2UgYXJlIFVOSU5TVEFMTElORwogICAgPC9wPgogIDwvYm9keT4KPC9odG1sPgo=",
-        "study_state": "ended-positive",  // neutral is default
+        "baseUrl": null,
       },
       "a-non-url-opening-ending": {
         "study_state": "ended-neutral",
         "baseUrl":  null,
       },
     },
+
     "telemetry": {
       "send": true, // assumed false. Actually send pings?
       "removeTestingFlag": false,  // Marks pings as testing, set true for actual release
       // TODO "onInvalid": "throw"  // invalid packet for schema?  throw||log
     },
-    "telemetryRapporPath": `./TelemetryRappor.jsm`,
+
     "studyUtilsPath": `./StudyUtils.jsm`,
   },
+
   "isEligible": async function() {
     // get whatever prefs, addons, telemetry, anything!
     // Cu.import can see 'firefox things', but not package things.

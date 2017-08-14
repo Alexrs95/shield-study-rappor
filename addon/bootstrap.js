@@ -27,9 +27,6 @@ const { studyUtils } = Cu.import(STUDYUTILSPATH, {});
 const RAPPORPATH = `${__SCRIPT_URI_SPEC__}/.././TelemetryRappor.jsm`;
 const { TelemetryRappor } = Cu.import(RAPPORPATH, {});
 
-//const TESTPATH = `${__SCRIPT_URI_SPEC__}/.././test_TelemetryRappor.js`;
-//const { TestRappor } = Cu.import(TESTPATH, {});
-
 const PREF_HOMEPAGE = "browser.startup.homepage";
 
 // addon state change reasons
