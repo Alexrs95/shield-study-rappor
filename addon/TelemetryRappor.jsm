@@ -206,7 +206,7 @@ function getRandomFloat() {
 // Create a report. Instead of storing a permanent randomized response, we use
 // a PRNG and a stored secret to re-compute B' on the fly every time we send
 // a report.
-function createReport(v, k, h, cohort, f, secret, name, p, q) {
+function createReport(v, k, h, p, q, f, cohort, secret, name) {
     let b = encode(v, k, h, cohort);
     let prr = getPRR(b, f, secret, name);
     let irr = getIRR(prr, p, q);
@@ -219,7 +219,7 @@ var TelemetryRappor = {
      * params:
      *  - name: name of the experiment. Used to store the preferences.
      *  - v: value to submit
-     *  - k (optional, default 16): size of the bloom filter in bytes.
+     *  - k (optional, default 16 (128 bits)): size of the bloom filter in bytes.
      *  - h (optional, default 2): number of hash functions
      *  - cohorts (optional, default 100): number of cohorts to use
      *  - f (optional, default 0.0): value for probability f.
@@ -260,7 +260,7 @@ var TelemetryRappor = {
 
         return {
             cohort: cohort,
-            report: bytesToHex(createReport(v, k, h, cohort, f, secret, name, p, q)),
+            report: bytesToHex(createReport(v, k, h, p, q, f, cohort, secret, name)),
         };
     },
 
