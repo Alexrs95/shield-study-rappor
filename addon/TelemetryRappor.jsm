@@ -111,7 +111,7 @@ function encode(v, k, h, cohort) {
         let idx = result.charCodeAt(result.length - 1) | (result.charCodeAt(result.length - 2) << 8);
         // Set the corresponding bit in the bloom filter. Shift 3 bits to select the index, as k is
         // represented in bytes, we need to shift 3 bits to get the correspondign bit (1 byte = 8 bits = 2^3).
-        setBit(b, idx % (k<<3));
+        setBit(b, idx % (k << 3));
     }
     return b;
 }

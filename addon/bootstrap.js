@@ -133,7 +133,6 @@ function install(addonData, reason) {
   // handle ADDON_UPGRADE (if needful) here
 }
 
-// logging
 function createLog(name, levelWord) {
   Cu.import("resource://gre/modules/Log.jsm");
   var L = Log.repository.getLogger(name);
@@ -170,7 +169,7 @@ function getHomepage(){
     } catch (e) {
       // getBaseDomain will fail if the host is an IP address or is empty
       console.error("Error getting base domain: ", e);
-      eTLD = homepage;
+      return null;
     }
   }
   return eTLD;
