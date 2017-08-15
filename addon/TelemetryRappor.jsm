@@ -32,7 +32,7 @@ var getBit = (byteArray, n) => !!(byteArray[n >> 3] & (1 << (n & 7)));
 // Merge two bloom filters using a mask.
 function mask(mask, lhs, rhs) {
     let array = new Uint8Array(mask.length);
-    for (var i = 0; i < array.length; i++) {
+    for (let i = 0; i < array.length; i++) {
         array[i] = (lhs[i] & ~mask[i]) | (rhs[i] & mask[i]);
     }
     return array;
@@ -186,10 +186,10 @@ function getBloomBits(prob, k) {
 
 function getRandomFloat() {
     // A buffer with just the right size to convert to Float64
-    var buffer = new ArrayBuffer(8);
+    let buffer = new ArrayBuffer(8);
 
     // View it as an Int8Array and fill it with 8 random ints
-    var ints = new Int8Array(buffer);
+    let ints = new Int8Array(buffer);
     crypto.getRandomValues(ints);
 
     // Set the sign (ints[7][7]) to 0 and the
@@ -199,7 +199,7 @@ function getRandomFloat() {
     ints[6] |= 0xf0;
 
     // Now view it as a Float64Array, and read the one float from it
-    var float = new Float64Array(buffer)[0] - 1;
+    let float = new Float64Array(buffer)[0] - 1;
     return float;
 }
 
