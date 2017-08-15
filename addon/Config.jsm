@@ -50,9 +50,8 @@ var config = {
     },
 
     "telemetry": {
-      "send": true, // assumed false. Actually send pings?
-      "removeTestingFlag": false,  // Marks pings as testing, set true for actual release
-      // TODO "onInvalid": "throw"  // invalid packet for schema?  throw||log
+      "send": true,
+      "removeTestingFlag": true,
     },
 
     "studyUtilsPath": `./StudyUtils.jsm`,
