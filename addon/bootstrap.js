@@ -157,6 +157,7 @@ function getHomepage(){
     homepageURI = Services.netUtils.newURI(homepage);
   } catch (e) {
     console.error("Error creating URI from homepage string: ", e);
+    return null;
   }
 
   var eTLD;
