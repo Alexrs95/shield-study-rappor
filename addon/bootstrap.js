@@ -143,9 +143,9 @@ function getHomepage(){
   }
   // transform the homepage into a nsIURI. Neccesary to get the base domain
   var homepageURI;
-  // TODO: FIX PROBLEM WITH MALFORMED URIS (google.es/)
   try {
-    homepageURI = Services.netUtils.newURI(homepage);
+    let uriFixup = Cc["@mozilla.org/docshell/urifixup;1"].getService(Ci.nsIURIFixup);
+    homepageURI = uriFixup .createFixupURI('google.es', Ci.nsIURIFixup.FIXUP_FLAG_NONE);
   } catch (e) {
     console.error("Error creating URI from homepage string: ", e);
     return null;
@@ -153,6 +153,7 @@ function getHomepage(){
 
   var eTLD;
   if (homepage.startsWith("about:")) {
+
     // If the homepage starts with 'about:' (see about:about)
     eTLD = "about:pages";
   } else {
