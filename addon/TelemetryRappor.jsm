@@ -20,8 +20,8 @@ Cu.importGlobalProperties(['crypto']);
 const console = new ConsoleAPI({prefix: "shield-study-rappor"});
 
 /**
- * 
- * @param str 
+ * Get bytes from string.
+ * @param {string} str - string. 
  */
 var bytesFromOctetString = str => new Uint8Array([for (i of str) i.charCodeAt(0)]);
 
@@ -40,7 +40,7 @@ var setBit = (byteArray, n) => byteArray[n>>3] |= (1 << (n & 7));
 
 /**
  * Return true if a bit is set in the byte array.
- * @param {Uint8Array} byteArray 
+ * @param {Uint8Array} byteArray - Bloom filter where to set the bit.
  * @param {integer} n - Index of the bit.
  */
 var getBit = (byteArray, n) => !!(byteArray[n >> 3] & (1 << (n & 7)));
