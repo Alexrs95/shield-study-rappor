@@ -1,7 +1,7 @@
 /*
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. 
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.S
  */
 
 "use strict";
@@ -49,14 +49,14 @@ function getHomepage(){
     if (homepage == "about:home") {
       eTLD = "about:home";
     } else {
-      // If the homepage starts with 'about:' (see about:about) and is not about:home
+      // If the homepage starts with 'about:' (see about:about) and is not about:home.
       eTLD = "about:pages";
     }
   } else {
     try {
       eTLD = Services.eTLD.getBaseDomain(homepageURI);
     } catch (e) {
-      // getBaseDomain will fail if the host is an IP address or is empty
+      // getBaseDomain will fail if the host is an IP address or is empty.
       console.error("Error getting base domain: ", e);
       return null;
     }
