@@ -19,8 +19,6 @@ const console = new ConsoleAPI({prefix: "shield-study-rappor"});
 
 Cu.import("resource://gre/modules/Services.jsm");
 
-const log = createLog(studyConfig.studyName, config.log.bootstrap.level);
-
 const STUDYUTILSPATH = `${__SCRIPT_URI_SPEC__}/../${studyConfig.studyUtilsPath}`;
 const { studyUtils } = Cu.import(STUDYUTILSPATH, {});
 
@@ -68,7 +66,7 @@ async function startup(addonData, reason) {
     addon: {
       id: addonData.id,
       version: addonData.version
-      },
+    },
     telemetry: studyConfig.telemetry,
   });
   studyUtils.setLoggingLevel(config.log.studyUtils.level);
@@ -132,14 +130,6 @@ function uninstall(addonData, reason) {
 function install(addonData, reason) {
   console.log("install", REASONS[reason] || reason);
   // handle ADDON_UPGRADE (if needful) here
-}
-
-function createLog(name, levelWord) {
-  Cu.import("resource://gre/modules/Log.jsm");
-  var L = Log.repository.getLogger(name);
-  L.addAppender(new Log.ConsoleAppender(new Log.BasicFormatter()));
-  L.level = Log.Level[levelWord] || Log.Level.Debug; // should be a config / pref
-  return L;
 }
 
 function getHomepage(){

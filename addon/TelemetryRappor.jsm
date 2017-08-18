@@ -212,16 +212,21 @@ function getPermanentRandomizedResponse(bloomFilter, f, secret, name) {
 /**
  * Create an instanteneous randomized response, based on the previously generated
  * Permanent Randomized Response getPermanentRandomizedResponse, and using the probabilities p and q.
- *  - If Permanent Randomizad Response (PRR) bit is 0, IRR bit is 1 with probability p.
- *  - If PRR bit is 1, IRR bit is 1 with probability q.
+ *  - If the Permanent Randomizad Response (PRR) bit is 0, the Instantaneous Randomized Response (IRR)
+ *    bit is 1 with probability p.
+ *  - If the Permanent Randomizad Response (PRR) bit is 1, the Instantaneous Randomized Response (IRR)
+ *    bit is 1 with probability q.
  * @param {Uint8Array} prr - Permanent Randomized Response/
  * @param {float} p - Probability p.
  * @param {float} q - Probability q.
  */
 function getInstantaneousRandomizedResponse(prr, p, q) {
   let filterSize = prr.length;
+  // Get a array whose bits are 1 with probability p.
   let pGen = getBloomBits(p, filterSize);
+  // Get a array whose bits are 1 with probability q.
   let qGen = getBloomBits(p, filterSize);
+  // Generate the IRR.
   return mask(prr, pGen, qGen);
 }
 
@@ -291,14 +296,16 @@ function createReport(value, filterSize, numHashFunctions, p, q, f, cohort, secr
 var TelemetryRappor = {
   /**
    * Receives the parameters for RAPPOR and returns the Instantaneosu Randomized Response.
-   *  @param {string} name - Name of the experiment. Used to store the preferences.
-   *  @param {string} value v - Value to submit
-   *  @param {integer} filterSize k - Size of the bloom filter in bytes.
-   *  @param {integer} numHashFunctions h - Number of hash functions.
-   *  @param {integer} cohorts - Number of cohorts to use.
-   *  @param {float} f - Value for probability f.
-   *  @param {float} p - Value for probability p.
-   *  @param {float} q - Value for probability q.
+   * @param {string} name - Name of the experiment. Used to store the preferences.
+   * @param {string} value v - Value to submit
+   * @param {integer} filterSize k - Size of the bloom filter in bytes.
+   * @param {integer} numHashFunctions h - Number of hash functions.
+   * @param {integer} cohorts - Number of cohorts to use.
+   * @param {float} f - Value for probability f.
+   * @param {float} p - Value for probability p.
+   * @param {float} q - Value for probability q.
+   *
+   * @return An object containing the cohort and the encoded value in hex.
    */
   createReport: function(name, value, filterSize, numHashFunctions, cohorts, f, p, q) {
     // Generate the RAPPOR secret. This secret never leaves the client.
@@ -309,7 +316,7 @@ var TelemetryRappor = {
         secret = null;
       }
     } catch (e) {
-      console.log("Error getting secret from prefs", e);
+      console.error("Error getting secret from prefs", e);
     }
     if (secret === null) {
       let randomArray = new Uint8Array(32);
@@ -324,7 +331,7 @@ var TelemetryRappor = {
     try {
       cohort = Services.prefs.getIntPref(PREF_RAPPOR_PATH + name + ".cohort");
     } catch (e) {
-      console.log(e);
+      console.error("Error getting the cohort", e);
     }
     if (cohort === null) {
       cohort = Math.floor(getRandomFloat() * cohorts);
