@@ -132,6 +132,11 @@ function install(addonData, reason) {
   // handle ADDON_UPGRADE (if needful) here
 }
 
+/**
+ * @returns the eTLD+1 of the user's homeapage. If the homepage is about:home,
+ * this value is returned. If it's any other about page, about:pages is returned.
+ * If the return value is null, there is a error with the homepage.
+ */
 function getHomepage(){
   // get the homepage of the user
   var homepage;
