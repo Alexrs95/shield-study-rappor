@@ -93,11 +93,11 @@ function makePRNG(seed) {
 
 // Hash client’s value v (string) onto the Bloom filter B of size k (in bytes) using
 // h hash functions and the given cohort.
-function encode(v, k, h, cohort) {
-  let b = new Uint8Array(k);
-  let data = bytesFromUTF8(v);
+function encode(value, filterSize, numHashFunctions, cohort) {
+  let bloomFilter = new Uint8Array(filterSize);
+  let data = bytesFromUTF8(value);
   let hash = Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
-  for (let n = 0; n < h; n++) {
+  for (let n = 0; n < numHashFunctions; n++) {
     hash.init(Ci.nsICryptoHash.SHA256);
     // Seed the hash function with the cohort and the hash function number. Since we
     // are using a strong hash function we can get away with using [0..k] as seed
@@ -111,23 +111,23 @@ function encode(v, k, h, cohort) {
     let idx = result.charCodeAt(result.length - 1) | (result.charCodeAt(result.length - 2) << 8);
     // Set the corresponding bit in the bloom filter. Shift 3 bits to select the index, as k is
     // represented in bytes, we need to shift 3 bits to get the correspondign bit (1 byte = 8 bits = 2^3).
-    setBit(b, idx % (k << 3));
+    setBit(bloomFilter, idx % (filterSize << 3));
   }
-  return b;
+  return bloomFilter;
 }
 
-function getPRR(b, f, secret, name) {
-  // Uniform bits are 1 with probability 1/2, and f_mask bits are 1 with
+function getPRR(bloomFilter, f, secret, name) {
+  // Uniform bits are 1 with probability 1/2, and fMask bits are 1 with
   // probability f.  So in the expression below:
-  //   - Bits in (uniform & f_mask) are 1 with probability f/2.
-  //   - (bloom_bits & ~f_mask) clears a bloom filter bit with probability
+  //   - Bits in (uniform & fMask) are 1 with probability f/2.
+  //   - (bloom_bits & ~fMask) clears a bloom filter bit with probability
   //   f, so we get B_i with probability 1-f.
   //   - The remaining bits are 0, with remaining probability f/2.
-  let k = b.length;
-  let uniform = new Uint8Array(k);
-  let f_mask = new Uint8Array(k);
+  let filterSize = bloomFilter.length;
+  let uniform = new Uint8Array(filterSize);
+  let fMask = new Uint8Array(filterSize);
   // Calculate the number of bits in the array
-  let bits = k * 8;
+  let bits = filterSize * 8;
   // the value of threshold128 is the maxium value for which the byte from the digest
   // is true (1) or false (0) in the bloom filter.
   let threshold128 = f * 128;
@@ -151,9 +151,9 @@ function getPRR(b, f, secret, name) {
     // Check if the value is less than the maxium value for which
     // the byte from the digest is true.
     let noise_bit = (rand128 < threshold128);
-    f_mask[idx] |= (noise_bit << i % 8);
+    fMask[idx] |= (noise_bit << i % 8);
   }
-  return mask(f_mask, b, uniform);
+  return mask(fMask, bloomFilter, uniform);
 }
 
 // Create an instanteneous randomized response, based on the previously generated
@@ -161,16 +161,16 @@ function getPRR(b, f, secret, name) {
 // If PRR bit is 0, IRR bit is 1 with probability p.
 // If PRR bit is 1, IRR bit is 1 with probability q.
 function getIRR(irr, p, q) {
-  let k = irr.length;
-  let p_gen = getBloomBits(p, k);
-  let g_gen = getBloomBits(p, k);
-  return mask(irr, p_gen, g_gen);
+  let filterSize = irr.length;
+  let pGen = getBloomBits(p, filterSize);
+  let qGen = getBloomBits(p, filterSize);
+  return mask(irr, pGen, g_gen);
 }
 
-function getBloomBits(prob, k) {
-  let arr = new Uint8Array(k);
+function getBloomBits(prob, filterSize) {
+  let arr = new Uint8Array(filterSize);
   // Calculate the number of bits in the array
-  let bits = k * 8;
+  let bits = filterSize * 8;
   for (let i = 0; i < bits; i++) {
     // Check whether a random number is higher or not than the given probability
     let bit = getRandomFloat() < prob;
@@ -206,9 +206,9 @@ function getRandomFloat() {
 // Create a report. Instead of storing a permanent randomized response, we use
 // a PRNG and a stored secret to re-compute B' on the fly every time we send
 // a report.
-function createReport(v, k, h, p, q, f, cohort, secret, name) {
-  let b = encode(v, k, h, cohort);
-  let prr = getPRR(b, f, secret, name);
+function createReport(value, filterSize, numHashFunctions, p, q, f, cohort, secret, name) {
+  let boomFilter = encode(value, filterSize, numHashFunctions, cohort);
+  let prr = getPRR(bloomFilter, f, secret, name);
   let irr = getIRR(prr, p, q);
   return irr;
 }
@@ -226,7 +226,7 @@ var TelemetryRappor = {
    *  - p (optional, default 0.35): value for probability p
    *  - q (optional, default 0.65): value for probability q
    */
-  createReport: function(name, v, k = 16, h = 2, cohorts = 100, f = 0.0, p = 0.35, q = 0.65) {
+  createReport: function(name, value, filterSize = 16, numHashFunctions = 2, cohorts = 100, f = 0.0, p = 0.35, q = 0.65) {
     // Generate the RAPPOR secret. This secret
     // never leaves the client.
     let secret = null;
@@ -260,7 +260,7 @@ var TelemetryRappor = {
 
   return {
     cohort: cohort,
-    report: bytesToHex(createReport(v, k, h, p, q, f, cohort, secret, name)),
+    report: bytesToHex(createReport(value, filterSize, numHashFunctions, p, q, f, cohort, secret, name)),
   };
   },
 
