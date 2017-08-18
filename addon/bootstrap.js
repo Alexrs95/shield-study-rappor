@@ -25,7 +25,7 @@ const { studyUtils } = Cu.import(STUDY_UTILS_PATH, {});
 const HOMEPAGE_STUDY_PATH = `${__SCRIPT_URI_SPEC__}/../HomepageStudy.jsm`;
 const { HomepageStudy } = Cu.import(HOMEPAGE_STUDY_PATH, {});
 
-// addon state change reasons
+// Addon state change reasons.
 const REASONS = {
   APP_STARTUP: 1,      // The application is starting up.
   APP_SHUTDOWN: 2,     // The application is shutting down.
@@ -39,7 +39,7 @@ const REASONS = {
 
 for (const r in REASONS) { REASONS[REASONS[r]] = r; }
 
-// jsm loader / unloader
+// Jsm loader / unloader.
 class Jsm {
   static import(modulesArray) {
     for (const module of modulesArray) {
@@ -71,12 +71,11 @@ async function startup(addonData, reason) {
   studyUtils.setVariation(studyConfig.variation);
 
   if ((REASONS[reason]) === "ADDON_INSTALL") {
-    studyUtils.firstSeen();  // sends telemetry "enter"
-    const eligible = await config.isEligible(); // addon-specific
+    // Sends telemetry "enter".
+    studyUtils.firstSeen();
+    const eligible = await config.isEligible();
     if (!eligible) {
-      // uses config.endings.ineligible.url if any,
-      // sends UT for "ineligible"
-      // then uninstalls addon
+      // Uses config.endings.ineligible.url if any, sends UT for "ineligible", then uninstalls addon.
       await studyUtils.endStudy({reason: "ineligible"});
       return;
     }
@@ -91,16 +90,16 @@ async function startup(addonData, reason) {
     studyUtils.endStudy({reason: "incorrect homepage"});
     return;
   }
-  // Send RAPPOR response to Telemetry
+  // Send RAPPOR response to Telemetry.
   studyUtils.telemetry({
     cohort: value.cohort.toString(),
     report: value.report
   });
-  //studyUtils.endStudy({reason: "done"});
+  studyUtils.endStudy({reason: "done"});
 }
 
 function unload() {
-  // normal shutdown, or 2nd attempts
+  // Normal shutdown, or 2nd attempts.
   console.log("Jsms unloading");
   Jsm.unload(config.modules);
   Jsm.unload([CONFIGPATH, STUDY_UTILS_PATH, HOMEPAGE_STUDY_PATH]);
@@ -108,12 +107,11 @@ function unload() {
 
 function shutdown(addonData, reason) {
   console.log("shutdown", REASONS[reason] || reason);
-  // are we uninstalling?
-  // if so, user or automatic?
+  // Are we uninstalling? if so, user or automatic?
   if (reason === REASONS.ADDON_UNINSTALL || reason === REASONS.ADDON_DISABLE) {
     console.log("uninstall or disable");
     if (!studyUtils._isEnding) {
-      // we are the first requestors, must be user action.
+      // We are the first requestors, must be user action.
       console.log("user requested shutdown");
       studyUtils.endStudy({reason: "user-disable"});
     }
@@ -127,5 +125,5 @@ function uninstall(addonData, reason) {
 
 function install(addonData, reason) {
   console.log("install", REASONS[reason] || reason);
-  // handle ADDON_UPGRADE (if needful) here
+  // Handle ADDON_UPGRADE (if needful) here.
 }
