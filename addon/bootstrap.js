@@ -153,9 +153,12 @@ function getHomepage(){
 
   var eTLD;
   if (homepage.startsWith("about:")) {
-
-    // If the homepage starts with 'about:' (see about:about)
-    eTLD = "about:pages";
+    if (homepage == "about:home") {
+      eTLD = "about:home";
+    } else {
+      // If the homepage starts with 'about:' (see about:about) and is not about:home
+      eTLD = "about:pages";
+    }
   } else {
     try {
       eTLD = Services.eTLD.getBaseDomain(homepageURI);
