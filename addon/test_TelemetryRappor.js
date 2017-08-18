@@ -118,30 +118,3 @@ function test_encode_not_equals() {
     return !equals(TelemetryRappor.internal.encode(v, k, h, cohort), expected);
 }
 
-function run(){
-    print("--- Running tests... ---");
-
-    print("– Test bloom filter or:");
-    print("\t test_or_true:", test_or_true());
-    print("\t test_or_false:", test_or_false());
-
-    print("– Test bloom filter and:");
-    print("\t test_and_true:", test_and_true());
-    print("\t test_and_false:", test_and_false());
-
-    print("– Test bytes from string:");
-    print("\t", test_bytesFromOctetString_true());
-    print("\t", test_bytesFromOctetString_false());
-
-    print("– Test bytes to hex:");
-    print("\t", test_bytesToHex_true());
-    print("\t", test_bytesToHex_false());
-
-    print("– Test set bit:");
-    print("\t", test_setBit_true());
-    print("\t", test_setBit_false());
-
-    print("– Test get bit:");
-    print("\t", test_getBit_true());
-    print("\t", test_getBit_false());
-}
