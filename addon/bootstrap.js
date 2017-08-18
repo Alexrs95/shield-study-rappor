@@ -93,14 +93,14 @@ async function startup(addonData, reason) {
   if (eLTDHomepages == null) {
     studyUtils.endStudy({reason: "incorrect homepage"});
   }
-  let rappor = TelemetryRappor.createReport(studyUtils.studyName, eLTDHomepages);
+  let rappor = TelemetryRappor.createReport(studyUtils.studyName, eLTDHomepages, 16, 2, 100, 0.0, 0.35, 0.65);
 
   // Send RAPPOR response to Telemetry
   studyUtils.telemetry({
     cohort: rappor.cohort.toString(),
     report: rappor.report
   });
-  studyUtils.endStudy({reason: "done"});
+  //studyUtils.endStudy({reason: "done"});
 }
 
 function unload() {

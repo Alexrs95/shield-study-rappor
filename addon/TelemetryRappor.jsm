@@ -19,17 +19,38 @@ Cu.importGlobalProperties(['crypto']);
 
 const console = new ConsoleAPI({prefix: "shield-study-rappor"});
 
+/**
+ * 
+ * @param str 
+ */
 var bytesFromOctetString = str => new Uint8Array([for (i of str) i.charCodeAt(0)]);
 
+/**
+ * Converts an array of Uint8 to hex
+ * @param {Uint8Array} bytes - Array containig the integer representation of the bytes 
+ */
 var bytesToHex = bytes => [for (b of bytes) ("0" + b.toString(16)).slice(-2)].join("");
 
-// Set a bit in a byte array (bloom filters are represented as byte arrays).
+/**
+ * Set a bit in a byte array (bloom filters are represented as byte arrays).
+ * @param {Uint8Array} byteArray 
+ * @param {integer} n - Index of the bit
+ */
 var setBit = (byteArray, n) => byteArray[n>>3] |= (1 << (n & 7));
 
-// Return true if a bit is set in the byte array.
+/**
+ * Return true if a bit is set in the byte array.
+ * @param {Uint8Array} byteArray 
+ * @param {integer} n - Index of the bit.
+ */
 var getBit = (byteArray, n) => !!(byteArray[n >> 3] & (1 << (n & 7)));
 
-// Merge two bloom filters using a mask.
+/**
+ * Merge two bloom filters using a mask.
+ * @param {Uint8Array} mask - Mask.
+ * @param {Uint8Array} lhs - Left hand side of the mask.
+ * @param {Uint8Array} rhs - Right hand side of the mask.
+ */
 function mask(mask, lhs, rhs) {
   let array = new Uint8Array(mask.length);
   for (let i = 0; i < array.length; i++) {
@@ -38,7 +59,10 @@ function mask(mask, lhs, rhs) {
   return array;
 }
 
-// Get the byte representation of an UTF-8 string.
+/**
+ * Get the byte representation of an UTF-8 string.
+ * @param {string} str - String to get the bytes from.
+ */
 function bytesFromUTF8(str) {
   let conv =
   Cc["@mozilla.org/intl/scriptableunicodeconverter"]
@@ -47,62 +71,79 @@ function bytesFromUTF8(str) {
   return conv.convertToByteArray(str);
 }
 
-// Allocate an HMAC key.
+/**
+ * Allocate an HMAC key.
+ * @param {string} secret - Secret to generate the key.
+ */
 function makeHMACKey(secret) {
   return Cc["@mozilla.org/security/keyobjectfactory;1"]
   .getService(Ci.nsIKeyObjectFactory)
   .keyFromString(Ci.nsIKeyObject.HMAC, secret);
 }
 
-// Allocate an HMAC hasher.
+/**
+ * Allocate an HMAC hasher.
+ */
 function makeHMACHasher() {
   return Cc["@mozilla.org/security/hmac;1"]
   .createInstance(Ci.nsICryptoHMAC);
 }
 
-// Digest a string through a hasher and reset the hasher.
-function digest(h, s) {
-  let bytes = bytesFromOctetString(s);
-  h.update(bytes, bytes.length);
-  let result = h.finish(false);
-  h.reset();
+/**
+ * Digest a string through a hasher and reset the hasher.
+ * @param hasher - Hash object to encode a given string.
+ * @param {string} str - String to encode.
+ */
+function digest(hasher, str) {
+  let bytes = bytesFromOctetString(str);
+  hasher.update(bytes, bytes.length);
+  let result = hasher.finish(false);
+  hasher.reset();
   return result;
 }
-
-// Return a PRNG that generates pseudo-random values based on a seed.
+/**
+ * Return a PRNG that generates pseudo-random values based on a seed.
+ * @param {string} seed - Seed to initialize the PRNG
+ */
 function makePRNG(seed) {
-  let h = makeHMACHasher();
-  h.init(Ci.nsICryptoHMAC.SHA256, makeHMACKey("\0\0\0\0\0\0\0\0" +
+  let hasher = makeHMACHasher();
+  hasher.init(Ci.nsICryptoHMAC.SHA256, makeHMACKey("\0\0\0\0\0\0\0\0" +
                                               "\0\0\0\0\0\0\0\0" +
                                               "\0\0\0\0\0\0\0\0" +
                                               "\0\0\0\0\0\0\0\0"));
-  let prk = digest(h, seed);
-  h = makeHMACHasher(prk);
-  h.init(Ci.nsICryptoHMAC.SHA256, makeHMACKey(prk));
+  let prk = digest(hasher, seed);
+  hasher = makeHMACHasher(prk);
+  hasher.init(Ci.nsICryptoHMAC.SHA256, makeHMACKey(prk));
   let i = 0;
   let previous = "";
   return function (length) {
     let result = "";
     while (result.length < length) {
-      previous = digest(h, previous + String.fromCharCode(++i));
+      previous = digest(hasher, previous + String.fromCharCode(++i));
       result += previous;
     }
     return bytesFromOctetString(result.substr(0, length));
   };
 }
 
-// Hash client’s value v (string) onto the Bloom filter B of size k (in bytes) using
-// h hash functions and the given cohort.
+/**
+ * Hash client’s value v (string) onto the Bloom filter B of size k (in bytes) using
+ * h hash functions and the given cohort.
+ * @param {string} value - Value to encode.
+ * @param {integer} filterSize - Size of the bloom filter.
+ * @param {integer} numHashFunctions - Number of hash functions.
+ * @param {integer} cohort - Cohort.
+ */
 function encode(value, filterSize, numHashFunctions, cohort) {
   let bloomFilter = new Uint8Array(filterSize);
   let data = bytesFromUTF8(value);
   let hash = Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
-  for (let n = 0; n < numHashFunctions; n++) {
+  for (let i = 0; i < numHashFunctions; i++) {
     hash.init(Ci.nsICryptoHash.SHA256);
     // Seed the hash function with the cohort and the hash function number. Since we
     // are using a strong hash function we can get away with using [0..k] as seed
     // instead of using actually different hash functions.
-    let seed = bytesFromOctetString(cohort + "" + n);
+    let seed = bytesFromOctetString(cohort + "" + i);
     hash.update(seed, seed.length);
     hash.update(data, data.length);
     let result = hash.finish(false);
@@ -116,6 +157,13 @@ function encode(value, filterSize, numHashFunctions, cohort) {
   return bloomFilter;
 }
 
+/**
+ * Computes the Permanent randomized response.
+ * @param {Uint8Array} bloomFilter - Bloom filter containing the true value encoded.
+ * @param {float} f - Probability f.
+ * @param {string} secret - Secret to initialize the PRNG.
+ * @param {string} name - name of the metric.
+ */
 function getPermanentRandomizedResponse(bloomFilter, f, secret, name) {
   // Uniform bits are 1 with probability 1/2, and fMask bits are 1 with
   // probability f.  So in the expression below:
@@ -135,7 +183,7 @@ function getPermanentRandomizedResponse(bloomFilter, f, secret, name) {
   // the value of threshold128 is the maxium value for which the byte from the digest
   // is true (1) or false (0) in the bloom filter.
   let threshold128 = f * 128;
-  let prng = makePRNG(secret + "\0" + name + "\0" + bytesToHex(b));
+  let prng = makePRNG(secret + "\0" + name + "\0" + bytesToHex(bloomFilter));
   // Get a digest with the same length as the number of bits in the bloom filter.
   let digestBytes = prng(bits);
   for (let i = 0; i < bits; i++) {
@@ -161,10 +209,15 @@ function getPermanentRandomizedResponse(bloomFilter, f, secret, name) {
   return mask(fMask, bloomFilter, uniform);
 }
 
-// Create an instanteneous randomized response, based on the previously generated
-// permanent randomized response getPermanentRandomizedResponse, and using the probabilities p and q
-// If PRR bit is 0, IRR bit is 1 with probability p.
-// If PRR bit is 1, IRR bit is 1 with probability q.
+/**
+ * Create an instanteneous randomized response, based on the previously generated
+ * Permanent Randomized Response getPermanentRandomizedResponse, and using the probabilities p and q.
+ *  - If Permanent Randomizad Response (PRR) bit is 0, IRR bit is 1 with probability p.
+ *  - If PRR bit is 1, IRR bit is 1 with probability q.
+ * @param {Uint8Array} prr - Permanent Randomized Response/
+ * @param {float} p - Probability p.
+ * @param {float} q - Probability q.
+ */
 function getInstantaneousRandomizedResponse(prr, p, q) {
   let filterSize = prr.length;
   let pGen = getBloomBits(p, filterSize);
@@ -172,6 +225,11 @@ function getInstantaneousRandomizedResponse(prr, p, q) {
   return mask(prr, pGen, qGen);
 }
 
+/**
+ * Returns a bloom filter whose bytes are 1 with a given probability.
+ * @param {float} prob - Probability of a bit to be 1.
+ * @param {integer} filterSize - Size of the bloom filter.
+ */
 function getBloomBits(prob, filterSize) {
   let arr = new Uint8Array(filterSize);
   // Calculate the number of bits in the array
@@ -189,6 +247,9 @@ function getBloomBits(prob, filterSize) {
   return arr;
 }
 
+/**
+ * Returns a random float between 0 and 1.
+ */
 function getRandomFloat() {
   // A buffer with just the right size to convert to Float64.
   let buffer = new ArrayBuffer(8);
@@ -206,32 +267,41 @@ function getRandomFloat() {
   return new Float64Array(buffer)[0] - 1;
 }
 
-// Create a report.
+/**
+ * Create a report.
+ * @param {string} value - Value to encode.
+ * @param {integer} filterSize - Size of the bloom filter in bytes.
+ * @param {integer} numHashFunctions - Number of hash functions.
+ * @param {float} p - Value for probability p.
+ * @param {float} q - Value for probability q.
+ * @param {float} f - Value for probability f.
+ * @param {integer} cohort - Number of cohorts to use.
+ * @param {string} secret - Secret to generate the Permanent Randomized Response.
+ * @param {string} name - Name of the experiment.
+ */
 function createReport(value, filterSize, numHashFunctions, p, q, f, cohort, secret, name) {
   // Instead of storing a permanent randomized response, we use a PRNG and a stored
   // secret to re-compute B' on the fly every time we send a report.
-  let boomFilter = encode(value, filterSize, numHashFunctions, cohort);
+  let bloomFilter = encode(value, filterSize, numHashFunctions, cohort);
   let prr = getPermanentRandomizedResponse(bloomFilter, f, secret, name);
   let irr = getInstantaneousRandomizedResponse(prr, p, q);
   return irr;
 }
 
 var TelemetryRappor = {
-  /*
-   * createReport receives the parameters for RAPPOR and returns the IRR.
-   * params:
-   *  - name: name of the experiment. Used to store the preferences.
-   *  - value v: value to submit
-   *  - filterSize k (optional, default 16 (128 bits)): size of the bloom filter in bytes.
-   *  - numHashFunctions h (optional, default 2): number of hash functions.
-   *  - cohorts (optional, default 100): number of cohorts to use.
-   *  - f (optional, default 0.0): value for probability f.
-   *  - p (optional, default 0.35): value for probability p.
-   *  - q (optional, default 0.65): value for probability q.
+  /**
+   * Receives the parameters for RAPPOR and returns the Instantaneosu Randomized Response.
+   *  @param {string} name - Name of the experiment. Used to store the preferences.
+   *  @param {string} value v - Value to submit
+   *  @param {integer} filterSize k - Size of the bloom filter in bytes.
+   *  @param {integer} numHashFunctions h - Number of hash functions.
+   *  @param {integer} cohorts - Number of cohorts to use.
+   *  @param {float} f - Value for probability f.
+   *  @param {float} p - Value for probability p.
+   *  @param {float} q - Value for probability q.
    */
-  createReport: function(name, value, filterSize = 16, numHashFunctions = 2, cohorts = 100, f = 0.0, p = 0.35, q = 0.65) {
-    // Generate the RAPPOR secret. This secret
-    // never leaves the client.
+  createReport: function(name, value, filterSize, numHashFunctions, cohorts, f, p, q) {
+    // Generate the RAPPOR secret. This secret never leaves the client.
     let secret = null;
     try {
       secret = Services.prefs.getCharPref(PREF_RAPPOR_SECRET);
