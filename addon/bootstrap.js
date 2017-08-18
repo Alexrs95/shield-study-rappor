@@ -19,13 +19,11 @@ const console = new ConsoleAPI({prefix: "shield-study-rappor"});
 
 Cu.import("resource://gre/modules/Services.jsm");
 
-const STUDYUTILSPATH = `${__SCRIPT_URI_SPEC__}/../${studyConfig.studyUtilsPath}`;
-const { studyUtils } = Cu.import(STUDYUTILSPATH, {});
+const STUDY_UTILS_PATH = `${__SCRIPT_URI_SPEC__}/../${studyConfig.studyUtilsPath}`;
+const { studyUtils } = Cu.import(STUDY_UTILS_PATH, {});
 
-const RAPPORPATH = `${__SCRIPT_URI_SPEC__}/.././TelemetryRappor.jsm`;
-const { TelemetryRappor } = Cu.import(RAPPORPATH, {});
-
-const PREF_HOMEPAGE = "browser.startup.homepage";
+const HOMEPAGE_STUDY_PATH = `${__SCRIPT_URI_SPEC__}/../HomepageStudy.jsm`;
+const { HomepageStudy } = Cu.import(HOMEPAGE_STUDY_PATH, {});
 
 // addon state change reasons
 const REASONS = {
@@ -86,17 +84,17 @@ async function startup(addonData, reason) {
   await studyUtils.startup({reason});
 
   console.log(`info ${JSON.stringify(studyUtils.info())}`);
-  // get the homepage and run RAPPOR
-  let eLTDHomepages = getHomepage();
-  if (eLTDHomepages == null) {
-    studyUtils.endStudy({reason: "incorrect homepage"});
-  }
-  let rappor = TelemetryRappor.createReport(studyUtils.studyName, eLTDHomepages, 16, 2, 100, 0.0, 0.35, 0.65);
 
+  let value = HomepageStudy.reportValue(studyUtils.studyName);
+  console.log(value);
+  if (value == null) {
+    studyUtils.endStudy({reason: "incorrect homepage"});
+    return;
+  }
   // Send RAPPOR response to Telemetry
   studyUtils.telemetry({
-    cohort: rappor.cohort.toString(),
-    report: rappor.report
+    cohort: value.cohort.toString(),
+    report: value.report
   });
   //studyUtils.endStudy({reason: "done"});
 }
@@ -105,7 +103,7 @@ function unload() {
   // normal shutdown, or 2nd attempts
   console.log("Jsms unloading");
   Jsm.unload(config.modules);
-  Jsm.unload([CONFIGPATH, STUDYUTILSPATH, RAPPORPATH]);
+  Jsm.unload([CONFIGPATH, STUDY_UTILS_PATH, HOMEPAGE_STUDY_PATH]);
 }
 
 function shutdown(addonData, reason) {
@@ -130,48 +128,4 @@ function uninstall(addonData, reason) {
 function install(addonData, reason) {
   console.log("install", REASONS[reason] || reason);
   // handle ADDON_UPGRADE (if needful) here
-}
-
-/**
- * @returns the eTLD+1 of the user's homeapage. If the homepage is about:home,
- * this value is returned. If it's any other about page, about:pages is returned.
- * If the return value is null, there is a error with the homepage.
- */
-function getHomepage(){
-  // get the homepage of the user
-  var homepage;
-  try {
-    homepage = Services.prefs.getComplexValue(PREF_HOMEPAGE, Ci.nsIPrefLocalizedString).data;
-  } catch (e) {
-    console.error("Error obtaining the homepage: ", e);
-    return null;
-  }
-  // transform the homepage into a nsIURI. Neccesary to get the base domain
-  var homepageURI;
-  try {
-    let uriFixup = Cc["@mozilla.org/docshell/urifixup;1"].getService(Ci.nsIURIFixup);
-    homepageURI = uriFixup .createFixupURI('google.es', Ci.nsIURIFixup.FIXUP_FLAG_NONE);
-  } catch (e) {
-    console.error("Error creating URI from homepage string: ", e);
-    return null;
-  }
-
-  var eTLD;
-  if (homepage.startsWith("about:")) {
-    if (homepage == "about:home") {
-      eTLD = "about:home";
-    } else {
-      // If the homepage starts with 'about:' (see about:about) and is not about:home
-      eTLD = "about:pages";
-    }
-  } else {
-    try {
-      eTLD = Services.eTLD.getBaseDomain(homepageURI);
-    } catch (e) {
-      // getBaseDomain will fail if the host is an IP address or is empty
-      console.error("Error getting base domain: ", e);
-      return null;
-    }
-  }
-  return eTLD;
 }
