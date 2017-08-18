@@ -77,7 +77,7 @@ function makePRNG(seed) {
                                               "\0\0\0\0\0\0\0\0" +
                                               "\0\0\0\0\0\0\0\0"));
   let prk = digest(h, seed);
-  h = makeHMACHasher();
+  h = makeHMACHasher(prk);
   h.init(Ci.nsICryptoHMAC.SHA256, makeHMACKey(prk));
   let i = 0;
   let previous = "";

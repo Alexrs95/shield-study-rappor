@@ -16,15 +16,12 @@
 /* eslint no-unused-vars: ["error", { "varsIgnorePattern": "(config|EXPORTED_SYMBOLS)" }]*/
 var EXPORTED_SYMBOLS = ["config"];
 
-// var slug = "shield-example-addon"; // should match chrome.manifest;
-
 var config = {
   "study": {
-    "studyName": "TelemetryRAPPOR", // no spaces, for all the reasons
+    "studyName": "TelemetryRAPPOR",
     "variation": {
       "name": "eTLD+1",
     },
-
     /** **endings**
       * - keys indicate the 'endStudy' even that opens these.
       * - urls should be static (data) or external, because they have to
@@ -48,15 +45,12 @@ var config = {
         "baseUrl":  null,
       },
     },
-
     "telemetry": {
       "send": true,
       "removeTestingFlag": true,
     },
-
     "studyUtilsPath": `./StudyUtils.jsm`,
   },
-
   "isEligible": async function() {
     // get whatever prefs, addons, telemetry, anything!
     // Cu.import can see 'firefox things', but not package things.
