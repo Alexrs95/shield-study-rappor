@@ -116,7 +116,7 @@ function encode(value, filterSize, numHashFunctions, cohort) {
   return bloomFilter;
 }
 
-function getPRR(bloomFilter, f, secret, name) {
+function getPermanentRandomizedResponse(bloomFilter, f, secret, name) {
   // Uniform bits are 1 with probability 1/2, and fMask bits are 1 with
   // probability f.  So in the expression below:
   //   - Bits in (uniform & fMask) are 1 with probability f/2.
@@ -124,47 +124,52 @@ function getPRR(bloomFilter, f, secret, name) {
   //   f, so we get B_i with probability 1-f.
   //   - The remaining bits are 0, with remaining probability f/2.
   let filterSize = bloomFilter.length;
+  // As Chrome we diverge from the paper a bit and don't actually randomly
+  // generate the fake data here. Instead we use a permanently stored
+  // secret (string), the name of the metric (string), and the data itself
+  // to feed a PRNG.
   let uniform = new Uint8Array(filterSize);
   let fMask = new Uint8Array(filterSize);
-  // Calculate the number of bits in the array
+  // Calculate the number of bits in the array.
   let bits = filterSize * 8;
   // the value of threshold128 is the maxium value for which the byte from the digest
   // is true (1) or false (0) in the bloom filter.
   let threshold128 = f * 128;
   let prng = makePRNG(secret + "\0" + name + "\0" + bytesToHex(b));
   // Get a digest with the same length as the number of bits in the bloom filter.
-  let digest_bytes = prng(bits);
+  let digestBytes = prng(bits);
   for (let i = 0; i < bits; i++) {
     // Calculate the index of the bit to set. This must be done because
     // we have to set individual bits to one or zero, but what we have are bytes.
     let idx = Math.floor(i/8);
 
-    // u_bit is true (1) if it's odd. False if even. Then, probability of
-    // being 1 is 1/2
-    let u_bit = digest_bytes[i] & 0x01; // 1 bit of entropy
-    uniform[idx] |= (u_bit << i % 8);
+    // uBit is true (1) if it's odd. False if even. Then, probability of
+    // being 1 is 1/2.
+    // 1 bit of entropy.
+    let uBit = digestBytes[i] & 0x01;
+    uniform[idx] |= (uBit << i % 8);
 
-    // digest_bytes[i] is a byte, with range 0 - 255.
+    // digestBytes[i] is a byte, with range 0 - 255.
     // we need a number between 0 and 127, so the last
-    // bit of digest_bytes[i] is discarded.
-    let rand128 = digest_bytes[i] >> 1; // 7 bits of entropy
+    // bit of digestBytes[i] is discarded.
+    let rand128 = digestBytes[i] >> 1; // 7 bits of entropy
     // Check if the value is less than the maxium value for which
     // the byte from the digest is true.
-    let noise_bit = (rand128 < threshold128);
-    fMask[idx] |= (noise_bit << i % 8);
+    let noiseBit = (rand128 < threshold128);
+    fMask[idx] |= (noiseBit << i % 8);
   }
   return mask(fMask, bloomFilter, uniform);
 }
 
 // Create an instanteneous randomized response, based on the previously generated
-// permanent randomized response computePrr, and using the probabilities p and q
+// permanent randomized response getPermanentRandomizedResponse, and using the probabilities p and q
 // If PRR bit is 0, IRR bit is 1 with probability p.
 // If PRR bit is 1, IRR bit is 1 with probability q.
-function getIRR(irr, p, q) {
-  let filterSize = irr.length;
+function getInstantaneousRandomizedResponse(prr, p, q) {
+  let filterSize = prr.length;
   let pGen = getBloomBits(p, filterSize);
   let qGen = getBloomBits(p, filterSize);
-  return mask(irr, pGen, g_gen);
+  return mask(prr, pGen, qGen);
 }
 
 function getBloomBits(prob, filterSize) {
@@ -172,7 +177,7 @@ function getBloomBits(prob, filterSize) {
   // Calculate the number of bits in the array
   let bits = filterSize * 8;
   for (let i = 0; i < bits; i++) {
-    // Check whether a random number is higher or not than the given probability
+    // Check whether a random number is higher or not than the given probability.
     let bit = getRandomFloat() < prob;
     // Calculate the index of the bit to set. This must be done because
     // we have to set individual bits to one or zero, but what we have are bytes.
@@ -185,31 +190,29 @@ function getBloomBits(prob, filterSize) {
 }
 
 function getRandomFloat() {
-  // A buffer with just the right size to convert to Float64
+  // A buffer with just the right size to convert to Float64.
   let buffer = new ArrayBuffer(8);
 
-  // View it as an Int8Array and fill it with 8 random ints
+  // View it as an Int8Array and fill it with 8 random ints.
   let ints = new Int8Array(buffer);
   crypto.getRandomValues(ints);
 
-  // Set the sign (ints[7][7]) to 0 and the
-  // exponent (ints[7][6]-[6][5]) to just the right size
-  // (all ones except for the highest bit)
+  // Set the sign (ints[7][7]) to 0 and the exponent (ints[7][6]-[6][5]) to just the
+  // right size (all ones except for the highest bit).
   ints[7] = 63;
   ints[6] |= 0xf0;
 
-  // Now view it as a Float64Array, and read the one float from it
-  let float = new Float64Array(buffer)[0] - 1;
-  return float;
+  // Now view it as a Float64Array, and read the one float from it.
+  return new Float64Array(buffer)[0] - 1;
 }
 
-// Create a report. Instead of storing a permanent randomized response, we use
-// a PRNG and a stored secret to re-compute B' on the fly every time we send
-// a report.
+// Create a report.
 function createReport(value, filterSize, numHashFunctions, p, q, f, cohort, secret, name) {
+  // Instead of storing a permanent randomized response, we use a PRNG and a stored
+  // secret to re-compute B' on the fly every time we send a report.
   let boomFilter = encode(value, filterSize, numHashFunctions, cohort);
-  let prr = getPRR(bloomFilter, f, secret, name);
-  let irr = getIRR(prr, p, q);
+  let prr = getPermanentRandomizedResponse(bloomFilter, f, secret, name);
+  let irr = getInstantaneousRandomizedResponse(prr, p, q);
   return irr;
 }
 
@@ -220,11 +223,11 @@ var TelemetryRappor = {
    *  - name: name of the experiment. Used to store the preferences.
    *  - value v: value to submit
    *  - filterSize k (optional, default 16 (128 bits)): size of the bloom filter in bytes.
-   *  - numHashFunctions h (optional, default 2): number of hash functions
-   *  - cohorts (optional, default 100): number of cohorts to use
+   *  - numHashFunctions h (optional, default 2): number of hash functions.
+   *  - cohorts (optional, default 100): number of cohorts to use.
    *  - f (optional, default 0.0): value for probability f.
-   *  - p (optional, default 0.35): value for probability p
-   *  - q (optional, default 0.65): value for probability q
+   *  - p (optional, default 0.35): value for probability p.
+   *  - q (optional, default 0.65): value for probability q.
    */
   createReport: function(name, value, filterSize = 16, numHashFunctions = 2, cohorts = 100, f = 0.0, p = 0.35, q = 0.65) {
     // Generate the RAPPOR secret. This secret
@@ -242,26 +245,26 @@ var TelemetryRappor = {
       let randomArray = new Uint8Array(32);
       crypto.getRandomValues(randomArray);
       secret = bytesToHex(randomArray);
-      Services.prefs.setCharPref(PREF_RAPPOR_SECRET, secret); 
+      Services.prefs.setCharPref(PREF_RAPPOR_SECRET, secret);
     }
 
-    // If we haven't self-selected a cohort yet for this measurement,
-    // then do so now, otherwise retrieve the cohort.
+    // If we haven't self-selected a cohort yet for this measurement, then do so now,
+    // otherwise retrieve the cohort.
     let cohort = null;
     try {
       cohort = Services.prefs.getIntPref(PREF_RAPPOR_PATH + name + ".cohort");
     } catch (e) {
-    console.log(e);
-  }
-  if (cohort === null) {
-    cohort = Math.floor(getRandomFloat() * cohorts);
-    Services.prefs.setIntPref(PREF_RAPPOR_PATH + name + ".cohort", cohort);
-  }
+      console.log(e);
+    }
+    if (cohort === null) {
+      cohort = Math.floor(getRandomFloat() * cohorts);
+      Services.prefs.setIntPref(PREF_RAPPOR_PATH + name + ".cohort", cohort);
+    }
 
-  return {
-    cohort: cohort,
-    report: bytesToHex(createReport(value, filterSize, numHashFunctions, p, q, f, cohort, secret, name)),
-  };
+    return {
+      cohort: cohort,
+      report: bytesToHex(createReport(value, filterSize, numHashFunctions, p, q, f, cohort, secret, name)),
+    };
   },
 
   // Expose internal functions for testing purpose.
@@ -271,8 +274,8 @@ var TelemetryRappor = {
     setBit: setBit,
     getBit: getBit,
     mask: mask,
-    getIRR: getIRR,
-    getPRR: getPRR,
+    getInstantaneousRandomizedResponse: getInstantaneousRandomizedResponse,
+    getPermanentRandomizedResponse: getPermanentRandomizedResponse,
     encode: encode,
     bytesFromUTF8: bytesFromUTF8,
     makeHMACKey: makeHMACKey,

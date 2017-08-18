@@ -72,8 +72,7 @@ async function startup(addonData, reason) {
     telemetry: studyConfig.telemetry,
   });
   studyUtils.setLoggingLevel(config.log.studyUtils.level);
-  const variation = studyConfig.variation;
-  studyUtils.setVariation(variation);
+  studyUtils.setVariation(studyConfig.variation);
 
   if ((REASONS[reason]) === "ADDON_INSTALL") {
     studyUtils.firstSeen();  // sends telemetry "enter"
@@ -91,7 +90,9 @@ async function startup(addonData, reason) {
   console.log(`info ${JSON.stringify(studyUtils.info())}`);
   // get the homepage and run RAPPOR
   let eLTDHomepages = getHomepage();
-  if (eLTDHomepages == null) { studyUtils.endStudy({reason: "incorrect homepage"}); }
+  if (eLTDHomepages == null) {
+    studyUtils.endStudy({reason: "incorrect homepage"});
+  }
   let rappor = TelemetryRappor.createReport(studyUtils.studyName, eLTDHomepages);
 
   // Send RAPPOR response to Telemetry
