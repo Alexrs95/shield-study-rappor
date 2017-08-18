@@ -218,9 +218,9 @@ var TelemetryRappor = {
    * createReport receives the parameters for RAPPOR and returns the IRR.
    * params:
    *  - name: name of the experiment. Used to store the preferences.
-   *  - v: value to submit
-   *  - k (optional, default 16 (128 bits)): size of the bloom filter in bytes.
-   *  - h (optional, default 2): number of hash functions
+   *  - value v: value to submit
+   *  - filterSize k (optional, default 16 (128 bits)): size of the bloom filter in bytes.
+   *  - numHashFunctions h (optional, default 2): number of hash functions
    *  - cohorts (optional, default 100): number of cohorts to use
    *  - f (optional, default 0.0): value for probability f.
    *  - p (optional, default 0.35): value for probability p
