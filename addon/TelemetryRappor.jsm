@@ -300,7 +300,7 @@ var TelemetryRappor = {
    * @param {string} value v - Value to submit
    * @param {integer} filterSize k - Size of the bloom filter in bytes.
    * @param {integer} numHashFunctions h - Number of hash functions.
-   * @param {integer} cohorts - Number of cohorts to use.
+   * @param {integer} cohorts m - Number of cohorts to use.
    * @param {float} f - Value for probability f.
    * @param {float} p - Value for probability p.
    * @param {float} q - Value for probability q.
