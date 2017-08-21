@@ -98,6 +98,10 @@ async function startup(addonData, reason) {
   studyUtils.endStudy({reason: "done"});
 }
 
+/**
+ * This function unloads the modules when the addon is 
+ * uninstalled.
+ */
 function unload() {
   // Normal shutdown, or 2nd attempts.
   console.log("Jsms unloading");
