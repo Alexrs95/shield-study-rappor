@@ -8,8 +8,8 @@
     <em:hasEmbeddedWebExtension>false</em:hasEmbeddedWebExtension>
     <em:unpack>false</em:unpack>
     <em:version>1.0.0</em:version>
-    <em:name>Shield Bootstrap Example</em:name>
-    <em:description>&lt;description&gt;
+    <em:name>Shield Study RAPPOR</em:name>
+    <em:description>RAPPOR as a Shield Study
     </em:description>
     <em:creator>Alejandro Rodriguez &lt;arodriguez@mozilla.com&gt;</em:creator>
 

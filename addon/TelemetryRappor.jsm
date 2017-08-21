@@ -21,7 +21,7 @@ const console = new ConsoleAPI({prefix: "shield-study-rappor"});
 
 /**
  * Get bytes from string.
- * @param {string} str - string. 
+ * @param {string} str - string.
  */
 var bytesFromOctetString = str => new Uint8Array([for (i of str) i.charCodeAt(0)]);
 

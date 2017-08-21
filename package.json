@@ -29,13 +29,13 @@
   "addon": {
     "version": "1.0.0",
     "id": "shield-study-rappor@mozilla.com",
-    "name": "Shield Bootstrap Example",
+    "name": "Shield Study RAPPOR",
     "minVersion": "53.0",
     "maxVersion": "*",
     "multiprocessCompatible": true,
     "hasEmbeddedWebExtension": false,
     "creator": "Alejandro Rodriguez <arodriguez@mozilla.com>",
-    "description": "<description>",
+    "description": "RAPPOR as a Shield Study",
     "chrome": "shield-study-rappor"
   },
   "dependencies": {}

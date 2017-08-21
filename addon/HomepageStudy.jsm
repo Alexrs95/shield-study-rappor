@@ -13,8 +13,9 @@ const EXPORTED_SYMBOLS = ["HomepageStudy"];
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Console.jsm");
 
-const RAPPORPATH = `jar:file:///Users/arodriguez/src/shield/shield-study-rappor/dist/addon.xpi!/bootstrap.js/.././TelemetryRappor.jsm`;
-const { TelemetryRappor } = Cu.import(RAPPORPATH, {});
+// TODO: Change this for a proper path.
+const RAPPOR_PATH = `jar:file:///Users/arodriguez/src/shield/shield-study-rappor/dist/addon.xpi!/bootstrap.js/.././TelemetryRappor.jsm`;
+const { TelemetryRappor } = Cu.import(RAPPOR_PATH, {});
 
 const console = new ConsoleAPI({prefix: "shield-study-rappor"});
 
@@ -64,9 +65,7 @@ function getHomepage(){
   return eTLD;
 }
 
-
 var HomepageStudy = {
-
 /**
  * Returns the value encoded by RAPPOR or null if the homepage can't be obtained.
  * @param {string} studyName - Name of the study.
@@ -74,7 +73,7 @@ var HomepageStudy = {
  * @returns the encoded value returned by RAPPOR or null if the eTLD+1 can't be obtained.
  */
   reportValue: function(studyName) {
-    var eLTDHomepage = getHomepage();
+    let eLTDHomepage = getHomepage();
     if (eLTDHomepage == null) {
       return null;
     }
