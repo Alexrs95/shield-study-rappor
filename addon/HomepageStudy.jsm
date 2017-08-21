@@ -39,7 +39,7 @@ function getHomepage(){
   let homepageURI;
   try {
     let uriFixup = Cc["@mozilla.org/docshell/urifixup;1"].getService(Ci.nsIURIFixup);
-    homepageURI = uriFixup.createFixupURI('google.es', Ci.nsIURIFixup.FIXUP_FLAG_NONE);
+    homepageURI = uriFixup.createFixupURI(homepage, Ci.nsIURIFixup.FIXUP_FLAG_NONE);
   } catch (e) {
     console.error("Error creating URI from homepage string: ", e);
     return null;
