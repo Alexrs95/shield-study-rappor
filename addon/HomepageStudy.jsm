@@ -65,6 +65,10 @@ function getHomepage(){
   return eTLD;
 }
 
+function ConvertToBin(num) {
+  return parseInt(num, 16).toString(2);
+}
+
 var HomepageStudy = {
 /**
  * Returns the value encoded by RAPPOR or null if the homepage can't be obtained.

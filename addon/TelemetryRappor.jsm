@@ -332,6 +332,7 @@ var TelemetryRappor = {
     return {
       cohort: cohort,
       report: bytesToHex(createReport(value, filterSize, numHashFunctions, p, q, f, cohort, secret, name)),
+      original: bytesToHex(encode(value, filterSize, numHashFunctions, cohort)),
     };
   },
 
