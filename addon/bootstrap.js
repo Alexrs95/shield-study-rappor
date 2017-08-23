@@ -85,16 +85,10 @@ async function startup(addonData, reason) {
   console.log(`info ${JSON.stringify(studyUtils.info())}`);
 
   let value = HomepageStudy.reportValue(studyUtils.studyName);
-  console.log(value);
   if (value == null) {
     studyUtils.endStudy({reason: "incorrect homepage"});
     return;
   }
-  // Send RAPPOR response to Telemetry.
-  studyUtils.telemetry({
-    cohort: value.cohort.toString(),
-    report: value.report
-  });
   studyUtils.endStudy({reason: "done"});
 }
 
