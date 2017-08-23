@@ -327,16 +327,7 @@ var TelemetryRappor = {
 
     // If we haven't self-selected a cohort yet for this measurement, then do so now,
     // otherwise retrieve the cohort.
-    let cohort = null;
-    try {
-      cohort = Services.prefs.getIntPref(PREF_RAPPOR_PATH + name + ".cohort");
-    } catch (e) {
-      console.error("Error getting the cohort", e);
-    }
-    if (cohort === null) {
-      cohort = Math.floor(getRandomFloat() * cohorts);
-      Services.prefs.setIntPref(PREF_RAPPOR_PATH + name + ".cohort", cohort);
-    }
+    let cohort = Math.floor(getRandomFloat() * cohorts);
 
     return {
       cohort: cohort,
