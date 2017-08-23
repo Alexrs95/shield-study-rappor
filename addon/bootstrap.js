@@ -84,11 +84,7 @@ async function startup(addonData, reason) {
 
   console.log(`info ${JSON.stringify(studyUtils.info())}`);
 
-  let value = HomepageStudy.reportValue(studyUtils.studyName);
-  if (value == null) {
-    studyUtils.endStudy({reason: "incorrect homepage"});
-    return;
-  }
+  HomepageStudy.reportValue(studyUtils.studyName);
   studyUtils.endStudy({reason: "done"});
 }
 

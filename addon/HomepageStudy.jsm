@@ -19,51 +19,7 @@ const { TelemetryRappor } = Cu.import(RAPPOR_PATH, {});
 
 const console = new ConsoleAPI({prefix: "shield-study-rappor"});
 
-const PREF_HOMEPAGE = "browser.startup.homepage";
 
-/**
- * @returns the eTLD+1 of the user's homeapage. If the homepage is about:home,
- * this value is returned. If it's any other about page, about:pages is returned.
- * If the return value is null, there is a error with the homepage.
- */
-function getHomepage(){
-
-  let homepage;
-  try {
-    homepage = Services.prefs.getComplexValue(PREF_HOMEPAGE, Ci.nsIPrefLocalizedString).data;
-  } catch (e) {
-    console.error("Error obtaining the homepage: ", e);
-    return null;
-  }
-  // transform the homepage into a nsIURI. Neccesary to get the base domain
-  let homepageURI;
-  try {
-    let uriFixup = Cc["@mozilla.org/docshell/urifixup;1"].getService(Ci.nsIURIFixup);
-    homepageURI = uriFixup.createFixupURI(homepage, Ci.nsIURIFixup.FIXUP_FLAG_NONE);
-  } catch (e) {
-    console.error("Error creating URI from homepage string: ", e);
-    return null;
-  }
-
-  let eTLD;
-  if (homepage.startsWith("about:")) {
-    if (homepage == "about:home") {
-      eTLD = "about:home";
-    } else {
-      // If the homepage starts with 'about:' (see about:about) and is not about:home.
-      eTLD = "about:pages";
-    }
-  } else {
-    try {
-      eTLD = Services.eTLD.getBaseDomain(homepageURI);
-    } catch (e) {
-      // getBaseDomain will fail if the host is an IP address or is empty.
-      console.error("Error getting base domain: ", e);
-      return null;
-    }
-  }
-  return eTLD;
-}
 
 function ConvertToBin(num) {
   return parseInt(num, 16).toString(2);
