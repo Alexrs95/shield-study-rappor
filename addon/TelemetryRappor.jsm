@@ -298,16 +298,17 @@ var TelemetryRappor = {
    * Receives the parameters for RAPPOR and returns the Instantaneosu Randomized Response.
    * @param {string} name - Name of the experiment. Used to store the preferences.
    * @param {string} value v - Value to submit
-   * @param {integer} filterSize k - Size of the bloom filter in bytes.
-   * @param {integer} numHashFunctions h - Number of hash functions.
-   * @param {integer} cohorts m - Number of cohorts to use.
-   * @param {float} f - Value for probability f.
-   * @param {float} p - Value for probability p.
-   * @param {float} q - Value for probability q.
+   * @param {Object} params - The parameters for the RAPPOR algorithm.
+   * @param {integer} params.filterSize k - Size of the bloom filter in bytes.
+   * @param {integer} params.numHashFunctions h - Number of hash functions.
+   * @param {integer} params.cohorts m - Number of cohorts to use.
+   * @param {float} params.f - Value for probability f.
+   * @param {float} params.p - Value for probability p.
+   * @param {float} params.q - Value for probability q.
    *
    * @return An object containing the cohort and the encoded value in hex.
    */
-  createReport: function(name, value, filterSize, numHashFunctions, cohorts, f, p, q) {
+  createReport: function(name, value, params) {
     // Generate the RAPPOR secret. This secret never leaves the client.
     let secret = null;
     try {
@@ -334,13 +335,13 @@ var TelemetryRappor = {
       console.error("Error getting the cohort", e);
     }
     if (!cohort) {
-      cohort = Math.floor(getRandomFloat() * cohorts);
+      cohort = Math.floor(getRandomFloat() * params.cohorts);
       Services.prefs.setIntPref(PREF_RAPPOR_PATH + name + ".cohort", cohort);
     }
 
     return {
       cohort: cohort,
-      report: bytesToHex(createReport(value, filterSize, numHashFunctions, p, q, f, cohort, secret, name)),
+      report: bytesToHex(createReport(value, params.filterSize, params.numHashFunctions, params.p, params.q, params.f, cohort, secret, name)),
     };
   },
 

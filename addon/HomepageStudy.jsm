@@ -47,7 +47,7 @@ function getHomepage() {
   }
 
   if (homepage.startsWith("about:")) {
-    return (homepage == "about:home") ? homepage : "about:pages";
+    return (homepage === "about:home") ? homepage : "about:pages";
   }
 
   let eTLD;
@@ -69,10 +69,11 @@ var HomepageStudy = {
    */
   reportValue: function(studyName) {
     let eTLDHomepage = getHomepage();
-    if (eTLDHomepage == null) {
+    if (!eTLDHomepage) {
       return null;
     }
-    return TelemetryRappor.createReport(studyName, eTLDHomepage, 16, 2, 100, 0.0, 0.35, 0.65);
+    return TelemetryRappor.createReport(studyName, eTLDHomepage, {filterSize: 16, numHashFunctions: 2,
+                cohorts: 100, f: 0.0, p: 0.35, q: 0.65});
   }
 }
 

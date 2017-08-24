@@ -87,6 +87,7 @@ async function startup(addonData, reason) {
   console.log(`info ${JSON.stringify(studyUtils.info())}`);
 
   let value = HomepageStudy.reportValue(studyUtils.studyName);
+  console.log(value);
   if (!value) {
     studyUtils.endStudy({reason: "ignored"});
     return;
@@ -100,7 +101,7 @@ async function startup(addonData, reason) {
 }
 
 /**
- * This function unloads the modules when the addon is 
+ * This function unloads the modules when the addon is
  * uninstalled.
  */
 function unload() {
