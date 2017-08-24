@@ -54,6 +54,8 @@ var config = {
   "isEligible": async function() {
     // get whatever prefs, addons, telemetry, anything!
     // Cu.import can see 'firefox things', but not package things.
+    // Everyone is elegible for this study. We want to get unbiased data
+    // from the entire population.
     return true;
   },
   // addon-specific modules to load/unload during `startup`, `shutdown`.
