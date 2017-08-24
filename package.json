@@ -1,7 +1,7 @@
 {
   "name": "shield-study-rappor",
   "version": "1.0.0",
-  "description": "RAPPOR as a Shield Study",
+  "description": "RAPPOR Shield study to collect homepage's eTLD+1",
   "main": "addon/bootstrap.js",
   "engines": {
     "firefox": ">=45.0 <=*"
@@ -29,13 +29,13 @@
   "addon": {
     "version": "1.0.0",
     "id": "shield-study-rappor@mozilla.com",
-    "name": "Shield Study RAPPOR",
+    "name": "eTLD+1 Shield Study RAPPOR",
     "minVersion": "53.0",
     "maxVersion": "*",
     "multiprocessCompatible": true,
     "hasEmbeddedWebExtension": false,
     "creator": "Alejandro Rodriguez <arodriguez@mozilla.com>",
-    "description": "RAPPOR as a Shield Study",
+    "description": "RAPPOR Shield study to collect homepage's eTLD+1",
     "chrome": "shield-study-rappor"
   },
   "dependencies": {}

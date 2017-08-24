@@ -75,7 +75,9 @@ async function startup(addonData, reason) {
     studyUtils.firstSeen();
     const eligible = await config.isEligible();
     if (!eligible) {
-      // Uses config.endings.ineligible.url if any, sends UT for "ineligible", then uninstalls addon.
+      // Uses config.endings.ineligible.url if any.
+      // Send a ping if the user is ineligible to run the study.
+      // Then uninstalls addon.
       await studyUtils.endStudy({reason: "ineligible"});
       return;
     }
@@ -85,9 +87,8 @@ async function startup(addonData, reason) {
   console.log(`info ${JSON.stringify(studyUtils.info())}`);
 
   let value = HomepageStudy.reportValue(studyUtils.studyName);
-  console.log(value);
-  if (value == null) {
-    studyUtils.endStudy({reason: "incorrect homepage"});
+  if (!value) {
+    studyUtils.endStudy({reason: "ignored"});
     return;
   }
   // Send RAPPOR response to Telemetry.
@@ -129,5 +130,4 @@ function uninstall(addonData, reason) {
 
 function install(addonData, reason) {
   console.log("install", REASONS[reason] || reason);
-  // Handle ADDON_UPGRADE (if needful) here.
 }

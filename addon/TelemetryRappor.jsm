@@ -172,17 +172,17 @@ function getPermanentRandomizedResponse(bloomFilter, f, secret, name) {
   //   f, so we get B_i with probability 1-f.
   //   - The remaining bits are 0, with remaining probability f/2.
   let filterSize = bloomFilter.length;
-  // As Chrome we diverge from the paper a bit and don't actually randomly
-  // generate the fake data here. Instead we use a permanently stored
-  // secret (string), the name of the metric (string), and the data itself
-  // to feed a PRNG.
   let uniform = new Uint8Array(filterSize);
   let fMask = new Uint8Array(filterSize);
   // Calculate the number of bits in the array.
   let bits = filterSize * 8;
-  // the value of threshold128 is the maxium value for which the byte from the digest
+  // The value of threshold128 is the maxium value for which the byte from the digest
   // is true (1) or false (0) in the bloom filter.
   let threshold128 = f * 128;
+  // As Chrome we diverge from the paper a bit and don't actually randomly
+  // generate the fake data here. Instead we use a permanently stored
+  // secret (string), the name of the metric (string), and the data itself
+  // to feed a PRNG.
   let prng = makePRNG(secret + "\0" + name + "\0" + bytesToHex(bloomFilter));
   // Get a digest with the same length as the number of bits in the bloom filter.
   let digestBytes = prng(bits);
@@ -220,7 +220,7 @@ function getPermanentRandomizedResponse(bloomFilter, f, secret, name) {
  * @param {float} p - Probability p.
  * @param {float} q - Probability q.
  */
-function getInstantaneousRandomizedResponse(prr, p, q) {
+function getInstantRandomizedResponse(prr, p, q) {
   let filterSize = prr.length;
   // Get a array whose bits are 1 with probability p.
   let pGen = getBloomBits(p, filterSize);
@@ -289,7 +289,7 @@ function createReport(value, filterSize, numHashFunctions, p, q, f, cohort, secr
   // secret to re-compute B' on the fly every time we send a report.
   let bloomFilter = encode(value, filterSize, numHashFunctions, cohort);
   let prr = getPermanentRandomizedResponse(bloomFilter, f, secret, name);
-  let irr = getInstantaneousRandomizedResponse(prr, p, q);
+  let irr = getInstantRandomizedResponse(prr, p, q);
   return irr;
 }
 
@@ -318,7 +318,7 @@ var TelemetryRappor = {
     } catch (e) {
       console.error("Error getting secret from prefs", e);
     }
-    if (secret === null) {
+    if (!secret) {
       let randomArray = new Uint8Array(32);
       crypto.getRandomValues(randomArray);
       secret = bytesToHex(randomArray);
@@ -333,7 +333,7 @@ var TelemetryRappor = {
     } catch (e) {
       console.error("Error getting the cohort", e);
     }
-    if (cohort === null) {
+    if (!cohort) {
       cohort = Math.floor(getRandomFloat() * cohorts);
       Services.prefs.setIntPref(PREF_RAPPOR_PATH + name + ".cohort", cohort);
     }
@@ -351,7 +351,7 @@ var TelemetryRappor = {
     setBit: setBit,
     getBit: getBit,
     mask: mask,
-    getInstantaneousRandomizedResponse: getInstantaneousRandomizedResponse,
+    getInstantRandomizedResponse: getInstantRandomizedResponse,
     getPermanentRandomizedResponse: getPermanentRandomizedResponse,
     encode: encode,
     bytesFromUTF8: bytesFromUTF8,
