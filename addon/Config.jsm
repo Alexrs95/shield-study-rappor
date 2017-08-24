@@ -56,18 +56,18 @@ var config = {
     // Cu.import can see 'firefox things', but not package things.
     return true;
   },
-  // addon-specific modules to load/unload during `startup`, `shutdown`
+  // addon-specific modules to load/unload during `startup`, `shutdown`.
+  // If it doesn't exist, the addon crashes when Jsm.import is called.
   "modules": [
-    // can use ${slug} here for example
   ],
   // sets the logging for BOTH the bootstrap file AND shield-study-utils
   "log": {
-    // Fatal: 70, Error: 60, Warn: 50, Info: 40, Config: 30, Debug: 20, Trace: 10, All: -1,
+    // Fatal: 70, Error: 60, Warn: 50, Info: 40, Config: 30, Debug: 20, Trace: 10, All: 0,
     "bootstrap":  {
       "level": "Debug",
     },
     "studyUtils":  {
-      "level": "Trace",
+      "level": "Debug",
     },
   },
 };
