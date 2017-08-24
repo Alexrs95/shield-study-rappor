@@ -19,6 +19,22 @@ const { TelemetryRappor } = Cu.import(RAPPOR_PATH, {});
 
 const console = new ConsoleAPI({prefix: "shield-study-rappor"});
 
+/**
+ * Read the cohort and the true value from a file. (client, cohort, value).
+ * @param {string} file - path containing the true values.
+ */
+function readCSV(file) {
+  return null;
+}
+
+/**
+ * write in a CSV client, cohort, bloom, prr, irr.
+ * @param data - object containing the client, cohort, bloom, prr and irr.
+ */
+function writeCSV(data) {
+  // case_reports.csv
+  return;
+}
 
 
 function ConvertToBin(num) {
@@ -33,11 +49,11 @@ var HomepageStudy = {
  * @returns the encoded value returned by RAPPOR or null if the eTLD+1 can't be obtained.
  */
   reportValue: function(studyName) {
-    let eLTDHomepage = getHomepage();
-    if (eLTDHomepage == null) {
-      return null;
+    // iterate over each line of the file
+    data = readCSV("case_true_values.csv");
+    for (var key in data) {
+      writeCSV(TelemetryRappor.createReport(client, studyName, eLTDHomepage, 16, 2, 100, 0.0, 0.35, 0.65));
     }
-    return TelemetryRappor.createReport(studyName, eLTDHomepage, 16, 2, 100, 0.0, 0.35, 0.65);
   },
 }
 

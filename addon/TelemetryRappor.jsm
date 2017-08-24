@@ -290,7 +290,11 @@ function createReport(value, filterSize, numHashFunctions, p, q, f, cohort, secr
   let bloomFilter = encode(value, filterSize, numHashFunctions, cohort);
   let prr = getPermanentRandomizedResponse(bloomFilter, f, secret, name);
   let irr = getInstantaneousRandomizedResponse(prr, p, q);
-  return irr;
+  return {
+    bloom: bloomFilter,
+    irr: irr,
+    prr: prr,
+  };
 }
 
 var TelemetryRappor = {
@@ -307,7 +311,7 @@ var TelemetryRappor = {
    *
    * @return An object containing the cohort and the encoded value in hex.
    */
-  createReport: function(name, value, filterSize, numHashFunctions, cohorts, f, p, q) {
+  createReport: function(client, name, value, filterSize, numHashFunctions, cohorts, f, p, q) {
     // Generate the RAPPOR secret. This secret never leaves the client.
     let secret = null;
     try {
@@ -328,11 +332,14 @@ var TelemetryRappor = {
     // If we haven't self-selected a cohort yet for this measurement, then do so now,
     // otherwise retrieve the cohort.
     let cohort = Math.floor(getRandomFloat() * cohorts);
+    let report = createReport(value, filterSize, numHashFunctions, p, q, f, cohort, secret, name);
 
     return {
+      client: client,
       cohort: cohort,
-      report: bytesToHex(createReport(value, filterSize, numHashFunctions, p, q, f, cohort, secret, name)),
-      original: bytesToHex(encode(value, filterSize, numHashFunctions, cohort)),
+      bloom: bytesToHex(report.bloom),
+      prr: bytesToHex(report.prr),
+      irr: bytesToHex(report.irr),
     };
   },
 
