@@ -308,7 +308,7 @@ var TelemetryRappor = {
    *
    * @return An object containing the cohort and the encoded value in hex.
    */
-  createReport: function(name, value, params) {
+  createReport(name, value, params) {
     // Generate the RAPPOR secret. This secret never leaves the client.
     let secret = null;
     try {

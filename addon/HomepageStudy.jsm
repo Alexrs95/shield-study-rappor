@@ -67,7 +67,7 @@ var HomepageStudy = {
    *
    * @returns the encoded value returned by RAPPOR or null if the eTLD+1 can't be obtained.
    */
-  reportValue: function(studyName) {
+  reportValue(studyName) {
     let eTLDHomepage = getHomepage();
     if (!eTLDHomepage) {
       return null;
