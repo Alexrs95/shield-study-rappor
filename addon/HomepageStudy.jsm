@@ -12,6 +12,7 @@ const EXPORTED_SYMBOLS = ["HomepageStudy"];
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Console.jsm");
+Cu.import("resource://gre/modules/FileUtils.jsm");
 
 // TODO: Change this for a proper path.
 const RAPPOR_PATH = `jar:file:///Users/arodriguez/src/shield/shield-study-rappor/dist/addon.xpi!/bootstrap.js/.././TelemetryRappor.jsm`;
@@ -50,9 +51,16 @@ var HomepageStudy = {
  */
   reportValue: function(studyName) {
     // iterate over each line of the file
-    data = readCSV("case_true_values.csv");
-    for (var key in data) {
-      writeCSV(TelemetryRappor.createReport(client, studyName, eLTDHomepage, 16, 2, 100, 0.0, 0.35, 0.65));
+    let data = readCSV("case_true_values.csv");
+    let params = readCSV("case_params.csv");
+    let k = params[];
+    let h = params[];
+    let m = params[];
+    let f = params[];
+    let p = params[];
+    let q = params[];
+    for (var test in data) {
+      writeCSV(TelemetryRappor.createReport(/*client*/ test[], studyName, /*eLTDHomepage*/ test[], k, h, m, f, p, q, /*cohort*/ test[]));
     }
   },
 }
