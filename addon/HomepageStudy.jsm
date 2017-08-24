@@ -11,15 +11,28 @@ const {classes:Cc, interfaces: Ci, utils: Cu} = Components;
 const EXPORTED_SYMBOLS = ["HomepageStudy"];
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Console.jsm");
+Cu.import("resource://gre/modules/Log.jsm");
+
 
 // TODO: Change this for a proper path.
 const RAPPOR_PATH = `jar:file:///Users/arodriguez/src/shield/shield-study-rappor/dist/addon.xpi!/bootstrap.js/.././TelemetryRappor.jsm`;
 const { TelemetryRappor } = Cu.import(RAPPOR_PATH, {});
 
-const console = new ConsoleAPI({prefix: "shield-study-rappor"});
-
 const PREF_HOMEPAGE = "browser.startup.homepage";
+
+const log = createLog("HomepageStudy", "Debug");
+
+/**
+ * Creates the logger
+ * @param {string} name - Name to show when logging.
+ * @param {string} level - Level of log.
+ */
+function createLog(name, level) {
+  var logger = Log.repository.getLogger(name);
+  logger.level = Log.Level[level] || Log.Level.Debug;
+  logger.addAppender(new Log.ConsoleAppender(new Log.BasicFormatter()));
+  return logger
+}
 
 /**
  * Get the user's homepage. If the homepage is about:home, this value is returned.
@@ -33,7 +46,7 @@ function getHomepage() {
   try {
     homepage = Services.prefs.getComplexValue(PREF_HOMEPAGE, Ci.nsIPrefLocalizedString).data;
   } catch (e) {
-    console.error("Error obtaining the homepage: ", e);
+    log.error("Error obtaining the homepage: ", e);
     return null;
   }
   // Transform the homepage into a nsIURI. Neccesary to get the base domain.
@@ -42,7 +55,7 @@ function getHomepage() {
     let uriFixup = Cc["@mozilla.org/docshell/urifixup;1"].getService(Ci.nsIURIFixup);
     homepageURI = uriFixup.createFixupURI(homepage, Ci.nsIURIFixup.FIXUP_FLAG_NONE);
   } catch (e) {
-    console.error("Error creating URI from homepage string: ", e);
+    log.error("Error creating URI from homepage string: ", e);
     return null;
   }
 
@@ -54,7 +67,7 @@ function getHomepage() {
   try {
     eTLD = Services.eTLD.getBaseDomain(homepageURI);
   } catch (e) {
-    console.error("Error getting base domain: ", e);
+    log.error("Error getting base domain: ", e);
     return null;
   }
   return eTLD;

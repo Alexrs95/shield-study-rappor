@@ -14,9 +14,7 @@ const CONFIGPATH = `${__SCRIPT_URI_SPEC__}/../Config.jsm`;
 const { config } = Cu.import(CONFIGPATH, {});
 const studyConfig = config.study;
 
-Cu.import("resource://gre/modules/Console.jsm");
-const console = new ConsoleAPI({prefix: "shield-study-rappor"});
-
+Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
 const STUDY_UTILS_PATH = `${__SCRIPT_URI_SPEC__}/../${studyConfig.studyUtilsPath}`;
@@ -24,6 +22,8 @@ const { studyUtils } = Cu.import(STUDY_UTILS_PATH, {});
 
 const HOMEPAGE_STUDY_PATH = `${__SCRIPT_URI_SPEC__}/../HomepageStudy.jsm`;
 const { HomepageStudy } = Cu.import(HOMEPAGE_STUDY_PATH, {});
+
+const log = createLog(studyConfig.studyName, config.log.bootstrap.level);
 
 // Addon state change reasons.
 const REASONS = {
@@ -39,17 +39,29 @@ const REASONS = {
 
 for (const r in REASONS) { REASONS[REASONS[r]] = r; }
 
+/**
+ * Creates the logger
+ * @param {string} name - Name to show when logging.
+ * @param {string} level - Level of log.
+ */
+function createLog(name, level) {
+  var logger = Log.repository.getLogger(name);
+  logger.level = Log.Level[level] || Log.Level.Debug;
+  logger.addAppender(new Log.ConsoleAppender(new Log.BasicFormatter()));
+  return logger
+}
+
 // Jsm loader / unloader.
 class Jsm {
   static import(modulesArray) {
     for (const module of modulesArray) {
-      console.log(`loading ${module}`);
+      log.debug(`loading ${module}`);
       Cu.import(module);
     }
   }
   static unload(modulesArray) {
     for (const module of modulesArray) {
-      console.log(`Unloading ${module}`);
+      log.debug(`Unloading ${module}`);
       Cu.unload(module);
     }
   }
@@ -84,7 +96,7 @@ async function startup(addonData, reason) {
   }
   await studyUtils.startup({reason});
 
-  console.log(`info ${JSON.stringify(studyUtils.info())}`);
+  log.debug(`info ${JSON.stringify(studyUtils.info())}`);
 
   let value = HomepageStudy.reportValue(studyUtils.studyName);
   if (!value) {
@@ -105,19 +117,19 @@ async function startup(addonData, reason) {
  */
 function unload() {
   // Normal shutdown, or 2nd attempts.
-  console.log("Jsms unloading");
+  log.debug("Jsms unloading");
   Jsm.unload(config.modules);
   Jsm.unload([CONFIGPATH, STUDY_UTILS_PATH, HOMEPAGE_STUDY_PATH]);
 }
 
 function shutdown(addonData, reason) {
-  console.log("shutdown", REASONS[reason] || reason);
+  log.debug("shutdown", REASONS[reason] || reason);
   // Are we uninstalling? if so, user or automatic?
   if (reason === REASONS.ADDON_UNINSTALL || reason === REASONS.ADDON_DISABLE) {
-    console.log("uninstall or disable");
+    log.debug("uninstall or disable");
     if (!studyUtils._isEnding) {
       // We are the first requestors, must be user action.
-      console.log("user requested shutdown");
+      log.debug("user requested shutdown");
       studyUtils.endStudy({reason: "user-disable"});
     }
   }
@@ -125,9 +137,9 @@ function shutdown(addonData, reason) {
 }
 
 function uninstall(addonData, reason) {
-  console.log("uninstall", REASONS[reason] || reason);
+  log.debug("uninstall", REASONS[reason] || reason);
 }
 
 function install(addonData, reason) {
-  console.log("install", REASONS[reason] || reason);
+  log.debug("install", REASONS[reason] || reason);
 }

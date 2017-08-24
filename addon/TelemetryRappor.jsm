@@ -13,11 +13,25 @@ const EXPORTED_SYMBOLS = ["TelemetryRappor"];
 const PREF_RAPPOR_PATH = "toolkit.telemetry.rappor.";
 const PREF_RAPPOR_SECRET = PREF_RAPPOR_PATH + "secret";
 
-Cu.import("resource://gre/modules/Console.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Log.jsm");
+
+const log = createLog("TelemetryRappor", "Debug");
+
 Cu.importGlobalProperties(['crypto']);
 
-const console = new ConsoleAPI({prefix: "shield-study-rappor"});
+
+/**
+ * Creates the logger
+ * @param {string} name - Name to show when logging.
+ * @param {string} level - Level of log.
+ */
+function createLog(name, level) {
+  var logger = Log.repository.getLogger(name);
+  logger.level = Log.Level[level] || Log.Level.Debug;
+  logger.addAppender(new Log.ConsoleAppender(new Log.BasicFormatter()));
+  return logger
+}
 
 /**
  * Get bytes from string.
@@ -317,7 +331,7 @@ var TelemetryRappor = {
         secret = null;
       }
     } catch (e) {
-      console.error("Error getting secret from prefs", e);
+      log.error("Error getting secret from prefs", e);
     }
     if (!secret) {
       let randomArray = new Uint8Array(32);
@@ -332,7 +346,7 @@ var TelemetryRappor = {
     try {
       cohort = Services.prefs.getIntPref(PREF_RAPPOR_PATH + name + ".cohort");
     } catch (e) {
-      console.error("Error getting the cohort", e);
+      log.error("Error getting the cohort", e);
     }
     if (!cohort) {
       cohort = Math.floor(getRandomFloat() * params.cohorts);
