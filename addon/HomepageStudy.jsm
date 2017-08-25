@@ -13,9 +13,7 @@ const EXPORTED_SYMBOLS = ["HomepageStudy"];
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 
-
-// TODO: Change this for a proper path.
-const RAPPOR_PATH = `jar:file:///Users/arodriguez/src/shield/shield-study-rappor/dist/addon.xpi!/bootstrap.js/.././TelemetryRappor.jsm`;
+const RAPPOR_PATH = `chrome://shield-study-rappor/content/TelemetryRappor.jsm`;
 const { TelemetryRappor } = Cu.import(RAPPOR_PATH, {});
 
 const PREF_HOMEPAGE = "browser.startup.homepage";
@@ -31,7 +29,7 @@ function createLog(name, level) {
   var logger = Log.repository.getLogger(name);
   logger.level = Log.Level[level] || Log.Level.Debug;
   logger.addAppender(new Log.ConsoleAppender(new Log.BasicFormatter()));
-  return logger
+  return logger;
 }
 
 /**

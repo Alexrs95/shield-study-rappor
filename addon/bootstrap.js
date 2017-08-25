@@ -18,10 +18,9 @@ Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
 const STUDY_UTILS_PATH = `${__SCRIPT_URI_SPEC__}/../${studyConfig.studyUtilsPath}`;
-const { studyUtils } = Cu.import(STUDY_UTILS_PATH, {});
-
 const HOMEPAGE_STUDY_PATH = `${__SCRIPT_URI_SPEC__}/../HomepageStudy.jsm`;
-const { HomepageStudy } = Cu.import(HOMEPAGE_STUDY_PATH, {});
+
+const { studyUtils } = Cu.import(STUDY_UTILS_PATH, {});
 
 const log = createLog(studyConfig.studyName, config.log.bootstrap.level);
 
@@ -68,6 +67,10 @@ class Jsm {
 }
 
 async function startup(addonData, reason) {
+  // NOTE: the chrome url registered in the manifest and used in the HomepageStudy.jsm
+  // is only available once the addon has been started, deferring the jsm loading to be able to
+  // use chrome urls to import all the other jsm.
+  let HomepageStudy = Cu.import(HOMEPAGE_STUDY_PATH, {}).HomepageStudy;
   Jsm.import(config.modules);
 
   studyUtils.setup({
@@ -99,6 +102,7 @@ async function startup(addonData, reason) {
   log.debug(`info ${JSON.stringify(studyUtils.info())}`);
 
   let value = HomepageStudy.reportValue(studyUtils.studyName);
+  log.debug(value);
   if (!value) {
     studyUtils.endStudy({reason: "ignored"});
     return;
@@ -141,5 +145,7 @@ function uninstall(addonData, reason) {
 }
 
 function install(addonData, reason) {
-  log.debug("install", REASONS[reason] || reason);
-}
+  // NOTE: the registered chrome url is not available in the install phase,
+  // it is only available once the addon has been started.
+  //log.debug("install", REASONS[reason] || reason);
+ }
