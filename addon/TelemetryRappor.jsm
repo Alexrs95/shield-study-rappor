@@ -16,21 +16,20 @@ const PREF_RAPPOR_SECRET = PREF_RAPPOR_PATH + "secret";
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 
-const log = createLog("TelemetryRappor", "Debug");
+const log = createLog("TelemetryRappor", "Trace");
 
 Cu.importGlobalProperties(['crypto']);
 
-
 /**
- * Creates the logger
- * @param {string} name - Name to show when logging.
- * @param {string} level - Level of log.
+ * Create the logger
+ * @param {string} name - Name to show in the logs.
+ * @param {string} level - Log level.
  */
 function createLog(name, level) {
   var logger = Log.repository.getLogger(name);
   logger.level = Log.Level[level] || Log.Level.Debug;
   logger.addAppender(new Log.ConsoleAppender(new Log.BasicFormatter()));
-  return logger
+  return logger;
 }
 
 /**
@@ -325,6 +324,7 @@ var TelemetryRappor = {
   createReport(name, value, params) {
     // Generate the RAPPOR secret. This secret never leaves the client.
     let secret = null;
+    log.debug("HEYYY");
     try {
       secret = Services.prefs.getCharPref(PREF_RAPPOR_SECRET);
       if (secret.length != 64) {

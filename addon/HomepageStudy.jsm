@@ -18,12 +18,12 @@ const { TelemetryRappor } = Cu.import(RAPPOR_PATH, {});
 
 const PREF_HOMEPAGE = "browser.startup.homepage";
 
-const log = createLog("HomepageStudy", "Debug");
+const log = createLog("HomepageStudy", "Trace");
 
 /**
- * Creates the logger
- * @param {string} name - Name to show when logging.
- * @param {string} level - Level of log.
+ * Create the logger
+ * @param {string} name - Name to show in the logs.
+ * @param {string} level - Log level.
  */
 function createLog(name, level) {
   var logger = Log.repository.getLogger(name);

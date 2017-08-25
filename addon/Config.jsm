@@ -68,8 +68,5 @@ var config = {
     "bootstrap":  {
       "level": "Trace",
     },
-    "studyUtils":  {
-      "level": "Trace",
-    },
   },
 };

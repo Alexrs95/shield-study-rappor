@@ -15,16 +15,26 @@ const { config } = Cu.import(CONFIGPATH, {});
 const studyConfig = config.study;
 
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Log.jsm");
 
 const STUDY_UTILS_PATH = `${__SCRIPT_URI_SPEC__}/../${studyConfig.studyUtilsPath}`;
 const HOMEPAGE_STUDY_PATH = `${__SCRIPT_URI_SPEC__}/../HomepageStudy.jsm`;
-const UTILS_PATH = `${__SCRIPT_URI_SPEC__}/../Utils.jsm`;
 
 const { studyUtils } = Cu.import(STUDY_UTILS_PATH, {});
-const { Utils } = Cu.import(UTILS_PATH, {});
 
+const log = createLog(studyConfig.studyName, config.log.bootstrap.level);
 
-const log = Utils.createLog(studyConfig.studyName, config.log.bootstrap.level);
+/**
+ * Create the logger
+ * @param {string} name - Name to show in the logs.
+ * @param {string} level - Log level.
+ */
+function createLog(name, level) {
+  var logger = Log.repository.getLogger(name);
+  logger.level = Log.Level[level] || Log.Level.Debug;
+  logger.addAppender(new Log.ConsoleAppender(new Log.BasicFormatter()));
+  return logger;
+}
 
 // Addon state change reasons.
 const REASONS = {
@@ -72,7 +82,6 @@ async function startup(addonData, reason) {
     },
     telemetry: studyConfig.telemetry,
   });
-  studyUtils.setLoggingLevel(config.log.studyUtils.level);
   studyUtils.setVariation(studyConfig.variation);
 
   if ((REASONS[reason]) === "ADDON_INSTALL") {
@@ -92,7 +101,6 @@ async function startup(addonData, reason) {
   log.debug(`info ${JSON.stringify(studyUtils.info())}`);
 
   let value = HomepageStudy.reportValue(studyUtils.studyName);
-  log.debug(value);
   if (!value) {
     studyUtils.endStudy({reason: "ignored"});
     return;
@@ -113,7 +121,7 @@ function unload() {
   // Normal shutdown, or 2nd attempts.
   log.debug("Jsms unloading");
   Jsm.unload(config.modules);
-  Jsm.unload([CONFIGPATH, STUDY_UTILS_PATH, HOMEPAGE_STUDY_PATH, UTILS_PATH]);
+  Jsm.unload([CONFIGPATH, STUDY_UTILS_PATH, HOMEPAGE_STUDY_PATH]);
 }
 
 function shutdown(addonData, reason) {
