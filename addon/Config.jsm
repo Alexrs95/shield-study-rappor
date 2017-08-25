@@ -47,6 +47,9 @@ var config = {
     },
     "telemetry": {
       "send": true,
+      // Shield study utils includes that in the telemetry payload
+      // to exclude testing data from analysis at a later point.
+      // Set to false for testing.
       "removeTestingFlag": true,
     },
     "studyUtilsPath": `./StudyUtils.jsm`,
