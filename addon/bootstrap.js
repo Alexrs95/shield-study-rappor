@@ -14,15 +14,17 @@ const CONFIGPATH = `${__SCRIPT_URI_SPEC__}/../Config.jsm`;
 const { config } = Cu.import(CONFIGPATH, {});
 const studyConfig = config.study;
 
-Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
 const STUDY_UTILS_PATH = `${__SCRIPT_URI_SPEC__}/../${studyConfig.studyUtilsPath}`;
 const HOMEPAGE_STUDY_PATH = `${__SCRIPT_URI_SPEC__}/../HomepageStudy.jsm`;
+const UTILS_PATH = `${__SCRIPT_URI_SPEC__}/../Utils.jsm`;
 
 const { studyUtils } = Cu.import(STUDY_UTILS_PATH, {});
+const { Utils } = Cu.import(UTILS_PATH, {});
 
-const log = createLog(studyConfig.studyName, config.log.bootstrap.level);
+
+const log = Utils.createLog(studyConfig.studyName, config.log.bootstrap.level);
 
 // Addon state change reasons.
 const REASONS = {
@@ -37,18 +39,6 @@ const REASONS = {
 };
 
 for (const r in REASONS) { REASONS[REASONS[r]] = r; }
-
-/**
- * Creates the logger
- * @param {string} name - Name to show when logging.
- * @param {string} level - Level of log.
- */
-function createLog(name, level) {
-  var logger = Log.repository.getLogger(name);
-  logger.level = Log.Level[level] || Log.Level.Debug;
-  logger.addAppender(new Log.ConsoleAppender(new Log.BasicFormatter()));
-  return logger
-}
 
 // Jsm loader / unloader.
 class Jsm {
@@ -123,7 +113,7 @@ function unload() {
   // Normal shutdown, or 2nd attempts.
   log.debug("Jsms unloading");
   Jsm.unload(config.modules);
-  Jsm.unload([CONFIGPATH, STUDY_UTILS_PATH, HOMEPAGE_STUDY_PATH]);
+  Jsm.unload([CONFIGPATH, STUDY_UTILS_PATH, HOMEPAGE_STUDY_PATH, UTILS_PATH]);
 }
 
 function shutdown(addonData, reason) {

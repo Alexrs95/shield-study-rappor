@@ -55,24 +55,21 @@ var config = {
     "studyUtilsPath": `./StudyUtils.jsm`,
   },
   "isEligible": async function() {
-    // get whatever prefs, addons, telemetry, anything!
-    // Cu.import can see 'firefox things', but not package things.
     // Everyone is elegible for this study. We want to get unbiased data
     // from the entire population.
     return true;
   },
   // addon-specific modules to load/unload during `startup`, `shutdown`.
   // If it doesn't exist, the addon crashes when Jsm.import is called.
-  "modules": [
-  ],
+  "modules": [],
   // sets the logging for BOTH the bootstrap file AND shield-study-utils
   "log": {
     // Fatal: 70, Error: 60, Warn: 50, Info: 40, Config: 30, Debug: 20, Trace: 10, All: 0,
     "bootstrap":  {
-      "level": "Debug",
+      "level": "Trace",
     },
     "studyUtils":  {
-      "level": "Debug",
+      "level": "Trace",
     },
   },
 };
