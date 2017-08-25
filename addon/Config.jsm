@@ -66,7 +66,7 @@ var config = {
   "log": {
     // Fatal: 70, Error: 60, Warn: 50, Info: 40, Config: 30, Debug: 20, Trace: 10, All: 0,
     "bootstrap":  {
-      "level": "Trace",
+      "level": "Info",
     },
   },
 };

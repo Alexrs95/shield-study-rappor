@@ -18,7 +18,7 @@ const { TelemetryRappor } = Cu.import(RAPPOR_PATH, {});
 
 const PREF_HOMEPAGE = "browser.startup.homepage";
 
-const log = createLog("HomepageStudy", "Trace");
+const log = createLog("HomepageStudy", "Info");
 
 /**
  * Create the logger

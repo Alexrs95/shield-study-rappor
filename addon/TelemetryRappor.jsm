@@ -16,7 +16,7 @@ const PREF_RAPPOR_SECRET = PREF_RAPPOR_PATH + "secret";
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 
-const log = createLog("TelemetryRappor", "Trace");
+const log = createLog("TelemetryRappor", "Info");
 
 Cu.importGlobalProperties(['crypto']);
 
