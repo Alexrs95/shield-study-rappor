@@ -87,4 +87,3 @@ var HomepageStudy = {
                                         cohorts: 100, f: 0.0, p: 0.35, q: 0.65});
   }
 }
-

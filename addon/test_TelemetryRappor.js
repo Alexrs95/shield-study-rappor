@@ -123,4 +123,3 @@ function test_encode_not_equals() {
     let expected = new Uint8Array([ 4, 0, 0, 1 ]);
     return !equals(TelemetryRappor.internal.encode(v, k, h, cohort), expected);
 }
-
