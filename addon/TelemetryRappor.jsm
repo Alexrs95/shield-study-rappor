@@ -373,7 +373,7 @@ var TelemetryRappor = {
    *
    * @return An object containing the cohort and the encoded value in hex.
    */
-  createReport: function(client, name, value, filterSize, numHashFunctions, cohorts, f, p, q, cohort) {
+  createReport(client, name, value, filterSize, numHashFunctions, cohorts, f, p, q, cohort) {
     // Generate the RAPPOR secret. This secret never leaves the client.
     let randomArray = new Uint8Array(32);
     crypto.getRandomValues(randomArray);
