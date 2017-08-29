@@ -216,10 +216,11 @@ _run-one-instance() {
 }
 
 analysis() {
-  local test_case=$1
-  local test_instance=$2
-  local impl=$3
+  local test_case=$1 # r-zipf1.5-tiny2-sim_final
+  local test_instance=$2 # 1
+  local impl=$3 # python
 
+  local regtest_dir=$REGTEST_BASE_DIR/$impl
   local case_dir=$REGTEST_BASE_DIR/$impl/$test_case
   local instance_dir=$case_dir/$test_instance
 
@@ -249,6 +250,8 @@ analysis() {
     tests/compare_dist.R -t "Test case: $test_case (instance $test_instance)" \
                          "$case_dir/case" "$instance_dir/case" $out_dir $num_clients $values_per_client
   }
+
+  make-summary $regtest_dir $impl
 }
 
 # Like _run-once-case, but log to a file.
@@ -365,7 +368,6 @@ _run-tests() {
 
   log "Done running all test instances"
 
-  make-summary $regtest_dir $impl
 }
 
 # used for most tests

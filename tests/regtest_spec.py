@@ -36,6 +36,7 @@ DISTRIBUTIONS = (
 DISTRIBUTION_PARAMS = (
     # name, num unique values, num clients, values per client
     ('tiny', 100, 10000, 1),  # test for insufficient data
+    ('tiny2', 3, 800, 1),  # test for insufficient data
     ('small', 100, 1000000, 1),
     ('small2', 10000, 1000000, 1),
     ('small3', 10, 1000000, 1),
@@ -286,6 +287,8 @@ TEST_CONFIGS = [
 
     #
     ('sim_final', '128x100x2', 'params14', .0, 'sharp'),
+    ('sim_final2', '8x16x2', 'params14', .0, 'sharp'),
+
 
 ]
 
