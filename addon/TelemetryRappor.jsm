@@ -138,6 +138,27 @@ function makePRNG(seed) {
     return bytesFromOctetString(result.substr(0, length));
   };
 }
+
+/**
+ * 
+ * @param method  - Method used to encode. Supported: nsICryptoHash.MD5 and nsICryptoHash.SHA256
+ * @param {string} value - Value to encode.
+ * @param {integer} filterSize - Size of the bloom filter.
+ * @param {integer} numHashFunctions - Number of hash functions.
+ * @param {integer} cohort - Cohort.
+ */
+function encode(method, value, filterSize, numHashFunctions, cohort) {
+  switch (method) {
+    case Ci.nsICryptoHash.MD5:
+      return encodeMD5(value, filterSize, numHashFunctions, cohort);
+    case Ci.nsICryptoHash.SHA256:
+      return encodeSHA256(value, filterSize, numHashFunctions, cohort);
+    default:
+      log.error("Unsuported encoding method: ", method);
+      break;
+  }
+}
+
 /**
  * Hash client’s value v (string) onto the Bloom filter B of size k (in bytes) using
  * h hash functions and the given cohort.
@@ -146,7 +167,7 @@ function makePRNG(seed) {
  * @param {integer} numHashFunctions - Number of hash functions.
  * @param {integer} cohort - Cohort.
  */
-function encode2(value, filterSize, numHashFunctions, cohort) {
+function encodeMD5(value, filterSize, numHashFunctions, cohort) {
   let bloomFilter = new Uint8Array(filterSize);
   let hash = Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
 
@@ -175,7 +196,7 @@ function encode2(value, filterSize, numHashFunctions, cohort) {
  * @param {integer} numHashFunctions - Number of hash functions.
  * @param {integer} cohort - Cohort.
  */
-function encode(value, filterSize, numHashFunctions, cohort) {
+function encodeSHA256(value, filterSize, numHashFunctions, cohort) {
   let bloomFilter = new Uint8Array(filterSize);
   let data = bytesFromUTF8(value);
   let hash = Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
@@ -328,7 +349,7 @@ function getRandomFloat() {
 function createReport(value, filterSize, numHashFunctions, p, q, f, cohort, secret, name) {
   // Instead of storing a permanent randomized response, we use a PRNG and a stored
   // secret to re-compute B' on the fly every time we send a report.
-  let bloomFilter = encode2(value, filterSize, numHashFunctions, cohort);
+  let bloomFilter = encode(Ci.nsICryptoHash.MD5, value, filterSize, numHashFunctions, cohort);
   let prr = getPermanentRandomizedResponse(bloomFilter, f, secret, name);
   let irr = getInstantRandomizedResponse(prr, p, q);
   return {
