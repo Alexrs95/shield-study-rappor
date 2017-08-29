@@ -14,7 +14,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Console.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 // TODO: Change this for a proper path.
-const RAPPOR_PATH = `jar:file:///Users/arodriguez/src/shield/shield-study-rappor/dist/addon.xpi!/bootstrap.js/.././TelemetryRappor.jsm`;
+const RAPPOR_PATH = `chrome://shield-study-rappor/content/TelemetryRappor.jsm`;
 const { TelemetryRappor } = Cu.import(RAPPOR_PATH, {});
 
 const console = new ConsoleAPI({prefix: "shield-study-rappor"});

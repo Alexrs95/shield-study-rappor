@@ -328,7 +328,7 @@ function getRandomFloat() {
 function createReport(value, filterSize, numHashFunctions, p, q, f, cohort, secret, name) {
   // Instead of storing a permanent randomized response, we use a PRNG and a stored
   // secret to re-compute B' on the fly every time we send a report.
-  let bloomFilter = encode(value, filterSize, numHashFunctions, cohort);
+  let bloomFilter = encode2(value, filterSize, numHashFunctions, cohort);
   let prr = getPermanentRandomizedResponse(bloomFilter, f, secret, name);
   let irr = getInstantRandomizedResponse(prr, p, q);
   return {
