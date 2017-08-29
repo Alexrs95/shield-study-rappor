@@ -10,10 +10,7 @@ const {classes:Cc, interfaces: Ci, utils: Cu} = Components;
 
 const EXPORTED_SYMBOLS = ["Utils"];
 
-Cu.import("resource://gre/modules/Console.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
-
-const console = new ConsoleAPI({prefix: "shield-study-rappor"});
 
 var Utils = {
 /**
