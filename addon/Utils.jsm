@@ -20,7 +20,7 @@ var Utils = {
  * Read the cohort and the true value from a file. {client, cohort, value}.
  * @param {nsFile} file - file containing the true values.
  */
-readCSV(file) {
+read(file) {
     // open an input stream from file
     var istream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(Ci.nsIFileInputStream);
     istream.init(file, 0x01, 0o444, 0);
@@ -41,7 +41,7 @@ readCSV(file) {
    * write in a CSV {client, cohort, bloom, prr, irr}.
    * @param data - object containing the client, cohort, bloom, prr and irr.
    */
-  writeCSV(file, data) {
+  write(file, data) {
     // file is nsIFile, data is a string
     var foStream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
   

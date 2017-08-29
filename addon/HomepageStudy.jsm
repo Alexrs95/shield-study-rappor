@@ -32,8 +32,8 @@ var HomepageStudy = {
  */
   reportValue(studyName) {
     // iterate over each line of the file
-    let data = Utils.readCSV(new FileUtils.File("/Users/arodriguez/src/shield/shield-study-rappor/_tmp/python/r-zipf1.5-tiny2-sim_final2/1/case_true_values.csv"));
-    let params = Utils.readCSV(new FileUtils.File("/Users/arodriguez/src/shield/shield-study-rappor/_tmp/python/r-zipf1.5-tiny2-sim_final2/case_params.csv"));
+    let data = Utils.read(new FileUtils.File("/Users/arodriguez/src/shield/shield-study-rappor/_tmp/python/r-zipf1.5-tiny2-sim_final2/1/case_true_values.csv"));
+    let params = Utils.read(new FileUtils.File("/Users/arodriguez/src/shield/shield-study-rappor/_tmp/python/r-zipf1.5-tiny2-sim_final2/case_params.csv"));
     let k = parseInt(params[1].split(",")[0], 10);
     let h = parseInt(params[1].split(",")[1], 10);
     let m = parseInt(params[1].split(",")[2], 10);
@@ -41,13 +41,13 @@ var HomepageStudy = {
     let q = parseFloat(params[1].split(",")[4]);
     let f = parseFloat(params[1].split(",")[5]);
 
-    Utils.writeCSV(new FileUtils.File("/Users/arodriguez/src/shield/shield-study-rappor/_tmp/python/r-zipf1.5-tiny2-sim_final2/1/case_reports.csv"),
+    Utils.write(new FileUtils.File("/Users/arodriguez/src/shield/shield-study-rappor/_tmp/python/r-zipf1.5-tiny2-sim_final2/1/case_reports.csv"),
     "client, cohort, bloom, prr, irr\n");
     for (let i = 1; i < data.length; i++) {
       let line = data[i].split(",");
       let report = TelemetryRappor.createReport(/*client*/ line[0], studyName, /*eLTDHomepage*/ line[2], k/8, h, m, f, p, q, /*cohort*/ line[1]);
       // client,cohort,bloom,prr,irr
-      Utils.writeCSV(new FileUtils.File("/Users/arodriguez/src/shield/shield-study-rappor/_tmp/python/r-zipf1.5-tiny2-sim_final2/1/case_reports.csv"),
+      Utils.write(new FileUtils.File("/Users/arodriguez/src/shield/shield-study-rappor/_tmp/python/r-zipf1.5-tiny2-sim_final2/1/case_reports.csv"),
         line[0] + ","+ line[1] + "," + Utils.convertToBin(report.bloom) + "," + Utils.convertToBin(report.prr) + "," + Utils.convertToBin(report.irr) + "\n");
     }
   },
