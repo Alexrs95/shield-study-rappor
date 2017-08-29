@@ -36,26 +36,27 @@ read(file) {
 
   /**
    * write in a CSV {client, cohort, bloom, prr, irr}.
-   * @param data - object containing the client, cohort, bloom, prr and irr.
+   * @param {nsIFile} file - File to write in.
+   * @param {string} data - String containing the client, cohort, bloom, prr and irr.
    */
   write(file, data) {
     // file is nsIFile, data is a string
     var foStream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
   
     foStream.init(file, 0x02 | 0x08 | 0x10, 0o666, 0); // write | create | append
-    // In a c file operation, we have no need to set file mode with or operation,
-    // directly using "r" or "w" usually.
-    // if you are sure there will never ever be any non-ascii text in data you can 
-    // also call foStream.write(data, data.length) directly
     var converter = Cc["@mozilla.org/intl/converter-output-stream;1"].createInstance(Ci.nsIConverterOutputStream);
     converter.init(foStream, "UTF-8", 0, 0);
     converter.writeString(data);
     converter.close(); // this closes foStream
   },
 
-  convertToBin(num) {
-    let str = parseInt(num, 16).toString(2);
-    let expected = num.toString().length * 4;
+  /**
+   * convert an string representing hex into a binary string.
+   * @param hex - hex string to convert.
+   */
+  convertToBin(hex) {
+    let str = parseInt(hex, 16).toString(2);
+    let expected = hex.toString().length * 4;
     let real = str.length;
     while (real < expected) {
       str = '0' + str;
