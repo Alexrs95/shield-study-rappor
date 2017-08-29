@@ -1,7 +1,7 @@
 /* 
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. 
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
 "use strict";
@@ -13,11 +13,24 @@ const EXPORTED_SYMBOLS = ["TelemetryRappor"];
 const PREF_RAPPOR_PATH = "toolkit.telemetry.rappor.";
 const PREF_RAPPOR_SECRET = PREF_RAPPOR_PATH + "secret";
 
-Cu.import("resource://gre/modules/Console.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Log.jsm");
+
+const log = createLog("TelemetryRappor", "Info");
+
 Cu.importGlobalProperties(['crypto']);
 
-const console = new ConsoleAPI({prefix: "shield-study-rappor"});
+/**
+ * Create the logger
+ * @param {string} name - Name to show in the logs.
+ * @param {string} level - Log level.
+ */
+function createLog(name, level) {
+  var logger = Log.repository.getLogger(name);
+  logger.level = Log.Level[level] || Log.Level.Debug;
+  logger.addAppender(new Log.ConsoleAppender(new Log.BasicFormatter()));
+  return logger;
+}
 
 /**
  * Get bytes from string.
@@ -125,7 +138,6 @@ function makePRNG(seed) {
     return bytesFromOctetString(result.substr(0, length));
   };
 }
-
 /**
  * Hash client’s value v (string) onto the Bloom filter B of size k (in bytes) using
  * h hash functions and the given cohort.
@@ -134,7 +146,7 @@ function makePRNG(seed) {
  * @param {integer} numHashFunctions - Number of hash functions.
  * @param {integer} cohort - Cohort.
  */
-function encode(value, filterSize, numHashFunctions, cohort) {
+function encode2(value, filterSize, numHashFunctions, cohort) {
   let bloomFilter = new Uint8Array(filterSize);
   let hash = Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
 
@@ -148,6 +160,37 @@ function encode(value, filterSize, numHashFunctions, cohort) {
   let result = hash.finish(false);
   for (let i = 0; i < numHashFunctions; i++) {
     let idx = result.charCodeAt(i);
+    // Set the corresponding bit in the bloom filter. Shift 3 bits to select the index, as k is
+    // represented in bytes, we need to shift 3 bits to get the correspondign bit (1 byte = 8 bits = 2^3).
+    setBit(bloomFilter, idx % (filterSize << 3));
+  }
+  return bloomFilter;
+}
+
+/**
+ * Hash client’s value v (string) onto the Bloom filter B of size k (in bytes) using
+ * h hash functions and the given cohort.
+ * @param {string} value - Value to encode.
+ * @param {integer} filterSize - Size of the bloom filter.
+ * @param {integer} numHashFunctions - Number of hash functions.
+ * @param {integer} cohort - Cohort.
+ */
+function encode(value, filterSize, numHashFunctions, cohort) {
+  let bloomFilter = new Uint8Array(filterSize);
+  let data = bytesFromUTF8(value);
+  let hash = Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
+  for (let i = 0; i < numHashFunctions; i++) {
+    hash.init(Ci.nsICryptoHash.SHA256);
+    // Seed the hash function with the cohort and the hash function number. Since we
+    // are using a strong hash function we can get away with using [0..k] as seed
+    // instead of using actually different hash functions.
+    let seed = bytesFromOctetString(cohort + "" + i);
+    hash.update(seed, seed.length);
+    hash.update(data, data.length);
+    let result = hash.finish(false);
+    // The last 2 bytes of the result as the bit index is sufficient for bloom filters
+    // of up to 65536 bytes in length.
+    let idx = result.charCodeAt(result.length - 1) | (result.charCodeAt(result.length - 2) << 8);
     // Set the corresponding bit in the bloom filter. Shift 3 bits to select the index, as k is
     // represented in bytes, we need to shift 3 bits to get the correspondign bit (1 byte = 8 bits = 2^3).
     setBit(bloomFilter, idx % (filterSize << 3));
@@ -170,17 +213,17 @@ function getPermanentRandomizedResponse(bloomFilter, f, secret, name) {
   //   f, so we get B_i with probability 1-f.
   //   - The remaining bits are 0, with remaining probability f/2.
   let filterSize = bloomFilter.length;
-  // As Chrome we diverge from the paper a bit and don't actually randomly
-  // generate the fake data here. Instead we use a permanently stored
-  // secret (string), the name of the metric (string), and the data itself
-  // to feed a PRNG.
   let uniform = new Uint8Array(filterSize);
   let fMask = new Uint8Array(filterSize);
   // Calculate the number of bits in the array.
   let bits = filterSize * 8;
-  // the value of threshold128 is the maxium value for which the byte from the digest
+  // The value of threshold128 is the maxium value for which the byte from the digest
   // is true (1) or false (0) in the bloom filter.
   let threshold128 = f * 128;
+  // As Chrome we diverge from the paper a bit and don't actually randomly
+  // generate the fake data here. Instead we use a permanently stored
+  // secret (string), the name of the metric (string), and the data itself
+  // to feed a PRNG.
   let prng = makePRNG(secret + "\0" + name + "\0" + bytesToHex(bloomFilter));
   // Get a digest with the same length as the number of bits in the bloom filter.
   let digestBytes = prng(bits);
@@ -218,7 +261,7 @@ function getPermanentRandomizedResponse(bloomFilter, f, secret, name) {
  * @param {float} p - Probability p.
  * @param {float} q - Probability q.
  */
-function getInstantaneousRandomizedResponse(prr, p, q) {
+function getInstantRandomizedResponse(prr, p, q) {
   let filterSize = prr.length;
   // Get a array whose bits are 1 with probability p.
   let pGen = getBloomBits(p, filterSize);
@@ -287,7 +330,7 @@ function createReport(value, filterSize, numHashFunctions, p, q, f, cohort, secr
   // secret to re-compute B' on the fly every time we send a report.
   let bloomFilter = encode(value, filterSize, numHashFunctions, cohort);
   let prr = getPermanentRandomizedResponse(bloomFilter, f, secret, name);
-  let irr = getInstantaneousRandomizedResponse(prr, p, q);
+  let irr = getInstantRandomizedResponse(prr, p, q);
   return {
     bloom: bloomFilter,
     irr: irr,
@@ -333,7 +376,7 @@ var TelemetryRappor = {
     setBit: setBit,
     getBit: getBit,
     mask: mask,
-    getInstantaneousRandomizedResponse: getInstantaneousRandomizedResponse,
+    getInstantRandomizedResponse: getInstantRandomizedResponse,
     getPermanentRandomizedResponse: getPermanentRandomizedResponse,
     encode: encode,
     bytesFromUTF8: bytesFromUTF8,

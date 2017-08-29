@@ -6,6 +6,12 @@
 
 "use strict";
 
+/*
+ * To run the tests, load the addon in Firefox using about:debugging.
+ * Then, open the browser toolbox, go to the console, and copy this code.
+ * Now, you can call manually the functions.
+ */
+
 function equals(array1, array2){
     if (array1.length != array2.length) { return false; }
 
@@ -117,4 +123,3 @@ function test_encode_not_equals() {
     let expected = new Uint8Array([ 4, 0, 0, 1 ]);
     return !equals(TelemetryRappor.internal.encode(v, k, h, cohort), expected);
 }
-

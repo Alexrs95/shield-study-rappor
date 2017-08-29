@@ -47,27 +47,26 @@ var config = {
     },
     "telemetry": {
       "send": true,
+      // Shield study utils includes that in the telemetry payload
+      // to exclude testing data from analysis at a later point.
+      // Set to false for testing.
       "removeTestingFlag": true,
     },
     "studyUtilsPath": `./StudyUtils.jsm`,
   },
   "isEligible": async function() {
-    // get whatever prefs, addons, telemetry, anything!
-    // Cu.import can see 'firefox things', but not package things.
+    // Everyone is elegible for this study. We want to get unbiased data
+    // from the entire population.
     return true;
   },
-  // addon-specific modules to load/unload during `startup`, `shutdown`
-  "modules": [
-    // can use ${slug} here for example
-  ],
+  // addon-specific modules to load/unload during `startup`, `shutdown`.
+  // If it doesn't exist, the addon crashes when Jsm.import is called.
+  "modules": [],
   // sets the logging for BOTH the bootstrap file AND shield-study-utils
   "log": {
-    // Fatal: 70, Error: 60, Warn: 50, Info: 40, Config: 30, Debug: 20, Trace: 10, All: -1,
+    // Fatal: 70, Error: 60, Warn: 50, Info: 40, Config: 30, Debug: 20, Trace: 10, All: 0,
     "bootstrap":  {
-      "level": "Debug",
-    },
-    "studyUtils":  {
-      "level": "Trace",
+      "level": "Info",
     },
   },
 };
