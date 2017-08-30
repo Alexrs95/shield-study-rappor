@@ -100,7 +100,18 @@ async function startup(addonData, reason) {
 
   console.log(`info ${JSON.stringify(studyUtils.info())}`);
 
-  HomepageStudy.reportValue(studyUtils.studyName);
+  let value = HomepageStudy.reportValue(studyConfig.studyName, studyConfig.isSimulation, studyConfig.rapporPath);
+  if (!value) {
+    studyUtils.endStudy({reason: "ignored"});
+    return;
+  }
+  if (!studyConfig.isSimulation){
+    // Send RAPPOR response to Telemetry.
+    studyUtils.telemetry({
+      cohort: value.cohort.toString(),
+      report: value.report
+    });
+  }
   studyUtils.endStudy({reason: "done"});
 }
 

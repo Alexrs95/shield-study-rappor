@@ -359,34 +359,80 @@ function createReport(value, filterSize, numHashFunctions, p, q, f, cohort, secr
   };
 }
 
+/**
+ * Generate the RAPPOR secret. This secret never leaves the client.
+ */
+function getSecret() {
+  let secret = null;
+  try {
+    secret = Services.prefs.getCharPref(PREF_RAPPOR_SECRET);
+    if (secret.length != 64) {
+      secret = null;
+    }
+  } catch (e) {
+    log.error("Error getting secret from prefs", e);
+  }
+  if (!secret) {
+    let randomArray = new Uint8Array(32);
+    crypto.getRandomValues(randomArray);
+    secret = bytesToHex(randomArray);
+    Services.prefs.setCharPref(PREF_RAPPOR_SECRET, secret);
+  }
+  return secret;
+}
+
+/**
+ * Returns the cohort. If the cohort is not stored, it's randomly generated
+ * in the range [0, cohorts] and stored in the preferences.
+ * 
+ * @param {string} name - Name to store the cohort.
+ * @param {int} cohorts - Max number of cohorts.
+ */
+function getCohort(name, cohorts){
+  let cohort = null;
+  try {
+    cohort = Services.prefs.getIntPref(PREF_RAPPOR_PATH + name + ".cohort");
+  } catch (e) {
+    log.error("Error getting the cohort", e);
+  }
+  if (!cohort) {
+    cohort = Math.floor(getRandomFloat() * cohorts);
+    Services.prefs.setIntPref(PREF_RAPPOR_PATH + name + ".cohort", cohort);
+  }
+  return cohort;
+}
+
 var TelemetryRappor = {
   /**
    * Receives the parameters for RAPPOR and returns the Instantaneosu Randomized Response.
    * @param {string} name - Name of the experiment. Used to store the preferences.
    * @param {string} value v - Value to submit
-   * @param {integer} filterSize k - Size of the bloom filter in bytes.
-   * @param {integer} numHashFunctions h - Number of hash functions.
-   * @param {integer} cohorts m - Number of cohorts to use.
-   * @param {float} f - Value for probability f.
-   * @param {float} p - Value for probability p.
-   * @param {float} q - Value for probability q.
+   * @param {Object} params - The parameters for the RAPPOR algorithm.
+   * @param {integer} params.filterSize k - Size of the bloom filter in bytes.
+   * @param {integer} params.numHashFunctions h - Number of hash functions.
+   * @param {integer} params.cohorts m - Number of cohorts to use.
+   * @param {float} params.f - Value for probability f.
+   * @param {float} params.p - Value for probability p.
+   * @param {float} params.q - Value for probability q.
+   * @param {boolean} isSimulation - Boolean that indicates if the addon is run in a simulation.
+   * @param {int} simCohort - Cohort for the simulation.
    *
    * @return An object containing the cohort and the encoded value in hex.
    */
-  createReport(client, name, value, filterSize, numHashFunctions, cohorts, f, p, q, cohort) {
-    // Generate the RAPPOR secret. This secret never leaves the client.
-    let randomArray = new Uint8Array(32);
-    crypto.getRandomValues(randomArray);
-    let secret = bytesToHex(randomArray);
-
-    // If we haven't self-selected a cohort yet for this measurement, then do so now,
-    // otherwise retrieve the cohort.
-    let report = createReport(value, filterSize, numHashFunctions, p, q, f, cohort, secret, name);
-
+  createReport(name, value, params, isSimulation = false, simCohort = null) {
+    let secret = getSecret(name);
+    let cohort = null;
+    if (isSimulation) {
+      cohort = simCohort;
+    } else {
+      cohort = getCohort(name, params.cohorts);
+    }
+    let report = createReport(value, params.filterSize, params.numHashFunctions, params.p, params.q, params.f, cohort, secret, name);
     return {
       bloom: bytesToHex(report.bloom),
       prr: bytesToHex(report.prr),
       irr: bytesToHex(report.irr),
+      cohort: cohort
     };
   },
 
@@ -405,6 +451,6 @@ var TelemetryRappor = {
     makeHMACHasher: makeHMACHasher,
     digest: digest,
     makePRNG: makePRNG,
-    createReport: createReport, 
+    createReport: createReport,
   },
 };
