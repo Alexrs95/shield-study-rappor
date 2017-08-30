@@ -122,8 +122,7 @@ are study related:  `["info", "telemetry", "endStudy"]`.
 7. The study ends and the addon is uninstalled.
 
 ## Simulations
-To check that the addon is working properly, some simulations should be performed. For that:
-
+To validate using the simulator, the addon can be set to work in *simulation* mode:
 1. Clone the RAPPOR simulator repository:
 
 ```git clone https://github.com/Alexrs95/rappor```

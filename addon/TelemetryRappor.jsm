@@ -421,12 +421,7 @@ var TelemetryRappor = {
    */
   createReport(name, value, params, isSimulation = false, simCohort = null) {
     let secret = getSecret(name);
-    let cohort = null;
-    if (isSimulation) {
-      cohort = simCohort;
-    } else {
-      cohort = getCohort(name, params.cohorts);
-    }
+    let cohort = isSimulation ? simCohort : getCohort(name, params.cohorts);
     let report = createReport(value, params.filterSize, params.numHashFunctions, params.p, params.q, params.f, cohort, secret, name);
     return {
       bloom: bytesToHex(report.bloom),

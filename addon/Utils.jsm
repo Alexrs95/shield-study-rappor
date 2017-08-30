@@ -35,7 +35,7 @@ read(file) {
   },
 
   /**
-   * write in a CSV {client, cohort, bloom, prr, irr}.
+   * Write in a CSV {client, cohort, bloom, prr, irr}.
    * @param {nsIFile} file - File to write in.
    * @param {string} data - String containing the client, cohort, bloom, prr and irr.
    */
@@ -51,7 +51,7 @@ read(file) {
   },
 
   /**
-   * convert an string representing hex into a binary string.
+   * Convert an string representing hex into a binary string.
    * @param hex - hex string to convert.
    */
   convertToBin(hex) {

@@ -80,6 +80,7 @@ function getHomepage() {
  * Returns the correct parameters depending if it's a standalone execution or a simulation.
  * @param {boolean} isSimulation - Boolean indicating if the addon is run for a simulation.
  * @param {string} rapporPath  - Path of the RAPPOR simulator.
+ * @param {string} instance - Instance of the simulation.
  */
 function getParams(isSimulation, rapporPath, instance) {
   if (!isSimulation) {
@@ -99,7 +100,9 @@ function getParams(isSimulation, rapporPath, instance) {
 }
 
 /**
- * 
+ * Runs the simulation and writes the data into case_reports.csv.
+ * For running the simulation, the true values from case_true_values.csv
+ * are read, and RAPPOR is executed.
  * @param {string} studyName - Name of the study.
  * @param {string} rapporPath - Path where the RAPPOR simulator lives.
  * @param {object} params - Object containing the algorithm parameters.

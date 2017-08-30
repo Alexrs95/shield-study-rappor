@@ -98,9 +98,9 @@ async function startup(addonData, reason) {
   }
   await studyUtils.startup({reason});
 
-  console.log(`info ${JSON.stringify(studyUtils.info())}`);
+  log.debug(`info ${JSON.stringify(studyUtils.info())}`);
 
-  let value = HomepageStudy.reportValue(studyConfig.studyName, studyConfig.isSimulation, studyConfig.rapporPath);
+  let value = HomepageStudy.reportValue(studyConfig.studyName, studyConfig.isSimulation, studyConfig.rapporSimulatorPath);
   if (!value) {
     studyUtils.endStudy({reason: "ignored"});
     return;
