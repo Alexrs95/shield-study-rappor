@@ -81,12 +81,12 @@ function getHomepage() {
  * @param {boolean} isSimulation - Boolean indicating if the addon is run for a simulation.
  * @param {string} rapporPath  - Path of the RAPPOR simulator.
  */
-function getParams(isSimulation, rapporPath) {
+function getParams(isSimulation, rapporPath, instance) {
   if (!isSimulation) {
     return {filterSize: 16, numHashFunctions: 2, cohorts: 100, f: 0.0, p: 0.35, q: 0.65};
   }
 
-  let params = Utils.read(new FileUtils.File(rapporPath + "_tmp/python/r-zipf1.5-tiny2-sim_final2/case_params.csv"));
+  let params = Utils.read(new FileUtils.File(rapporPath + "_tmp/python/" + instance + "/case_params.csv"));
   // In the file, the filterSize (k) value is in bits, but here we use bytes.
   let filterSize = parseInt(params[1].split(",")[0], 10) / 8;
   let numHashFunctions = parseInt(params[1].split(",")[1], 10);
@@ -98,9 +98,15 @@ function getParams(isSimulation, rapporPath) {
   return {filterSize: filterSize, numHashFunctions: numHashFunctions, cohorts: cohorts, f: f, p: p, q: q};
 }
 
-function runRapporSimulation(studyName, rapporPath, params) {
-  let data = Utils.read(new FileUtils.File(rapporPath + "_tmp/python/r-zipf1.5-tiny2-sim_final2/1/case_true_values.csv"));
-  let caseReportsFile = new FileUtils.File(rapporPath + "_tmp/python/r-zipf1.5-tiny2-sim_final2/1/case_reports.csv");
+/**
+ * 
+ * @param {string} studyName - Name of the study.
+ * @param {string} rapporPath - Path where the RAPPOR simulator lives.
+ * @param {object} params - Object containing the algorithm parameters.
+ */
+function runRapporSimulation(studyName, rapporPath, params, instance) {
+  let data = Utils.read(new FileUtils.File(rapporPath + "_tmp/python/" + instance + "/1/case_true_values.csv"));
+  let caseReportsFile = new FileUtils.File(rapporPath + "_tmp/python/" + instance + "/1/case_reports.csv");
   Utils.write(caseReportsFile, "client, cohort, bloom, prr, irr\n");
   // iterate over each line of the file getting the
   // client, cohort and value.
@@ -116,14 +122,20 @@ var HomepageStudy = {
 /**
  * Returns the value encoded by RAPPOR or null if the homepage can't be obtained.
  * @param {string} studyName - Name of the study.
+ * @param {boolean} isSimulation - Boolean indicating whether the execution is for a simulation.
+ * @param {string} rapporPath - Path where the RAPPOR simulator is located.
  *
  * @returns the encoded value returned by RAPPOR or null if the eTLD+1 can't be obtained.
  */
   reportValue(studyName, isSimulation, rapporPath) {
-    let params = getParams(isSimulation, rapporPath);
+    let instance = null;
+    if(isSimulation) {
+      instance = Utils.read(new FileUtils.File(rapporPath + "_tmp/python/test-instances.txt"))[0].split(" ")[0];
+    }
+    let params = getParams(isSimulation, rapporPath, instance);
 
     if (isSimulation){
-      runRapporSimulation(studyName, rapporPath, params);
+      runRapporSimulation(studyName, rapporPath, params, instance);
     } else {
       let eTLDHomepage = getHomepage();
       if (!eTLDHomepage) {
