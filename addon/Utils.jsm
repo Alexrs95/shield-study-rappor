@@ -28,9 +28,9 @@ read(file) {
       hasmore = istream.readLine(line);
       lines.push(line.value);
     } while(hasmore);
-  
+
     istream.close();
-  
+
     return lines;
   },
 
