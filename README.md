@@ -127,13 +127,19 @@ To check that the addon is working properly, some simulations should be performe
 1. Clone the RAPPOR simulator repository:
 
 ```git clone https://github.com/Alexrs95/rappor```
+
 2. Follow the instructions to install the dependencies.
+
 3. Generate data (You can find the list of possible data distributions in [`tests/regtest_spec.py`](https://github.com/Alexrs95/rappor/blob/master/tests/regtest_spec.py):
 
 ```./regtest.sh gen-values 'zipf1.5-tiny2-sim_final2'```
+
 4. Set the option `isSimulation` to `true` in `addon/Config.jsm`.
+
 5. Set the option `rapporPath` to the location of the RAPPOR simulator in `addon/Config.jsm`.
+
 6. Run the addon. In Firefox: `about:debugging > [load temporary addon] >` choose `dist/addon.xpi`.
+
 7. Perform the analysis:
 
 ```./regtest.sh analysis 'r-zipf1.5-tiny2-sim_final2' 1 'python'```
