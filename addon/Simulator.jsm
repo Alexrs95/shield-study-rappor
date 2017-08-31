@@ -92,7 +92,8 @@ function read(file) {
  */
 function write(file, data) {
   var foStream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
-  foStream.init(file, FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE | FileUtils.MODE_APPEND, 0o666, 0); // write | create | append
+  foStream.init(file, FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE | FileUtils.MODE_APPEND,
+                FileUtils.PERMS_FILE, 0);
   var converter = Cc["@mozilla.org/intl/converter-output-stream;1"].createInstance(Ci.nsIConverterOutputStream);
   converter.init(foStream, "UTF-8", 0, 0);
   converter.writeString(data);
