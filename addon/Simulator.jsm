@@ -136,7 +136,6 @@ var Simulator = {
   runRapporSimulation(studyName, rapporPath,
                       {filterSize: filterSize, numHashFunctions: numHashFunctions, cohorts: cohorts, f: f, p: p, q: q},
                       Ci.nsICryptoHash.MD5, instance);
-
   },
 }
 
