@@ -19,7 +19,6 @@ Cu.import("resource://gre/modules/Log.jsm");
 
 const STUDY_UTILS_PATH = `${__SCRIPT_URI_SPEC__}/../${studyConfig.studyUtilsPath}`;
 const HOMEPAGE_STUDY_PATH = `${__SCRIPT_URI_SPEC__}/../HomepageStudy.jsm`;
-
 const SIMULATOR_PATH = `${__SCRIPT_URI_SPEC__}/../Simulator.jsm`;
 
 const { studyUtils } = Cu.import(STUDY_UTILS_PATH, {});
