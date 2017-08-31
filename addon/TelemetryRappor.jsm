@@ -148,15 +148,10 @@ function makePRNG(seed) {
  * @param {integer} cohort - Cohort.
  */
 function encode(hashingFunction, value, filterSize, numHashFunctions, cohort) {
-  switch (hashingFunction) {
-    case Ci.nsICryptoHash.MD5:
-      return encodeMD5(value, filterSize, numHashFunctions, cohort);
-    case Ci.nsICryptoHash.SHA256:
-      return encodeSHA256(value, filterSize, numHashFunctions, cohort);
-    default:
-      log.error("Unsuported encoding function: ", hashingFunction);
-      break;
+  if (hashingFunction == Ci.nsICryptoHash.MD5) {
+    return encodeMD5(value, filterSize, numHashFunctions, cohort);
   }
+  return encodeSHA256(value, filterSize, numHashFunctions, cohort);
 }
 
 /**
@@ -416,14 +411,15 @@ var TelemetryRappor = {
    * @param {float} params.f - Value for probability f.
    * @param {float} params.p - Value for probability p.
    * @param {float} params.q - Value for probability q.
-   * @param {boolean} isSimulation - Boolean that indicates if the addon is run in a simulation.
-   * @param {int} simulatedCohort - Cohort for the simulation.
+   * @param {int} cohort - Cohort for the simulation.
    *
    * @return An object containing the cohort and the encoded value in hex.
    */
-  createReport(name, value, params, hashingFunction, simulatedCohort = null) {
+  createReport(name, value, params, hashingFunction, cohort = null) {
     let secret = getSecret(name);
-    let cohort = !simulatedCohort ? simulatedCohort : getCohort(name, params.cohorts);
+    if (cohort === null) {
+      cohort = getCohort(name, params.cohorts);
+    }
     let report = createReport(value, params.filterSize, params.numHashFunctions, params.p, params.q, params.f, cohort, secret, name, hashingFunction);
     return {
       internalBloom: bytesToHex(report.bloom),

@@ -34,10 +34,12 @@ function createLog(name, level) {
  * Runs the simulation and writes the data into case_reports.csv.
  * For running the simulation, the true values from case_true_values.csv
  * are read, and RAPPOR is executed.
- * The expected format of case_true_values.csv is {client, cohort, value}.
+ * The case_true_value.csv is expected to have multiple lines with the following
+ * format {client, cohort, value}.
  * It contains the true values used for the simulation, the client that submits
  * the value and the cohort this client belongs to.
- * The format of case_reports.csv is {client, cohort, bloom, prr, irr}. This values
+ * The case_reports.csv is expected to have multiple lines with the following
+ * format {client, cohort, bloom, prr, irr}. This values
  * are needed to run the analysis.
  * @param {string} studyName - Name of the study.
  * @param {string} rapporPath - Path where the RAPPOR simulator lives.
@@ -63,18 +65,20 @@ function runRapporSimulation(studyName, rapporPath, params, method, instance) {
 /**
  * Read the cohort and the true value from a file. {client, cohort, value}.
  * @param {nsFile} file - file containing the true values.
+ * 
+ * @return a list containig the lines of the file.
  */
 function read(file) {
   // open an input stream from file
   var istream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(Ci.nsIFileInputStream);
-  istream.init(file, 0x01, 0o444, 0);
+  istream.init(file, FileUtils.MODE_RDONLY, FileUtils.PERMS_FILE, 0);
   istream.QueryInterface(Ci.nsILineInputStream);
   // read lines into array
-  var line = {}, lines = [], hasmore;
+  var line = {}, lines = [], hasMore;
   do {
-    hasmore = istream.readLine(line);
+    hasMore = istream.readLine(line);
     lines.push(line.value);
-  } while(hasmore);
+  } while(hasMore);
 
   istream.close();
 
@@ -89,12 +93,12 @@ function read(file) {
 function write(file, data) {
   // file is nsIFile, data is a string
   var foStream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
-
-  foStream.init(file, 0x02 | 0x08 | 0x10, 0o666, 0); // write | create | append
+  foStream.init(file, FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE | FileUtils.MODE_APPEND, 0o666, 0); // write | create | append
   var converter = Cc["@mozilla.org/intl/converter-output-stream;1"].createInstance(Ci.nsIConverterOutputStream);
   converter.init(foStream, "UTF-8", 0, 0);
   converter.writeString(data);
-  converter.close(); // this closes foStream
+  converter.close();
+  foStream.close();
 }
 
 /**
@@ -113,25 +117,23 @@ function convertToBin(hex) {
 }
 
 var Simulator = {
-/**
- * Returns the value encoded by RAPPOR or null if the homepage can't be obtained.
- * @param {string} studyName - Name of the study.
- * @param {boolean} isSimulation - Boolean indicating whether the execution is for a simulation.
- * @param {string} rapporPath - Path where the RAPPOR simulator is located.
- *
- * @returns the encoded value returned by RAPPOR or null if the eTLD+1 can't be obtained.
- */
-reportValue(studyName, isSimulation, rapporPath) {
-  let instance = read(new FileUtils.File(rapporPath + "_tmp/python/test-instances.txt"))[0].split(" ")[0];
+  /**
+   * Returns the value encoded by RAPPOR or null if the homepage can't be obtained.
+   * @param {string} studyName - Name of the study.
+   * @param {boolean} isSimulation - Boolean indicating whether the execution is for a simulation.
+   * @param {string} rapporPath - Path where the RAPPOR simulator is located.
+   */
+  reportValue(studyName, isSimulation, rapporPath) {
+    let instance = read(new FileUtils.File(rapporPath + "_tmp/python/test-instances.txt"))[0].split(" ")[0];
 
-  let params = read(new FileUtils.File(rapporPath + "_tmp/python/" + instance + "/case_params.csv"));
-  // In the file, the filterSize (k) value is in bits, but here we use bytes.
-  let filterSize = parseInt(params[1].split(",")[0], 10) / 8;
-  let numHashFunctions = parseInt(params[1].split(",")[1], 10);
-  let cohorts = parseInt(params[1].split(",")[2], 10);
-  let p = parseFloat(params[1].split(",")[3]);
-  let q = parseFloat(params[1].split(",")[4]);
-  let f = parseFloat(params[1].split(",")[5]);
+    let params = read(new FileUtils.File(rapporPath + "_tmp/python/" + instance + "/case_params.csv"));
+    // In the file, the filterSize (k) value is in bits, but here we use bytes.
+    let filterSize = parseInt(params[1].split(",")[0], 10) / 8;
+    let numHashFunctions = parseInt(params[1].split(",")[1], 10);
+    let cohorts = parseInt(params[1].split(",")[2], 10);
+    let p = parseFloat(params[1].split(",")[3]);
+    let q = parseFloat(params[1].split(",")[4]);
+    let f = parseFloat(params[1].split(",")[5]);
 
   runRapporSimulation(studyName, rapporPath,
                       {filterSize: filterSize, numHashFunctions: numHashFunctions, cohorts: cohorts, f: f, p: p, q: q},
