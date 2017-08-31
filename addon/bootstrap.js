@@ -151,5 +151,5 @@ function uninstall(addonData, reason) {
 function install(addonData, reason) {
   // NOTE: the registered chrome url is not available in the install phase,
   // it is only available once the addon has been started.
-  //log.debug("install", REASONS[reason] || reason);
+  log.debug("install", REASONS[reason] || reason);
  }
