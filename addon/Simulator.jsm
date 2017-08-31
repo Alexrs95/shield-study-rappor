@@ -91,9 +91,7 @@ function read(file) {
  * @param {string} data - String containing the client, cohort, bloom, prr and irr.
  */
 function write(file, data) {
-  var foStream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
-  foStream.init(file, FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE | FileUtils.MODE_APPEND,
-                FileUtils.PERMS_FILE, 0);
+  var foStream = FileUtils.openFileOutputStream(file, FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE | FileUtils.MODE_APPEND);
   var converter = Cc["@mozilla.org/intl/converter-output-stream;1"].createInstance(Ci.nsIConverterOutputStream);
   converter.init(foStream, "UTF-8", 0, 0);
   converter.writeString(data);
