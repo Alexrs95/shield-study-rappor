@@ -135,11 +135,13 @@ To validate using the simulator, the addon can be set to work in *simulation* mo
 
 4. Set the option `isSimulation` to `true` in `addon/Config.jsm`.
 
-5. Set the option `rapporPath` to the location of the RAPPOR simulator in `addon/Config.jsm`.
+5. Set the option `rapporSimulatorPath` to the location of the RAPPOR simulator in `addon/Config.jsm`.
 
-6. Run the addon. In Firefox: `about:debugging > [load temporary addon] >` choose `dist/addon.xpi`.
+6. Build the addon with `npm run build`.
 
-7. Perform the analysis:
+7. Run the addon. In Firefox: `about:debugging > [load temporary addon] >` choose `dist/addon.xpi`.
+
+8. Perform the analysis:
 
 ```./regtest.sh analysis 'r-zipf1.5-tiny2-sim_final2' 1 'python'```
 

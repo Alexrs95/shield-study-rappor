@@ -133,9 +133,9 @@ var Simulator = {
     let q = parseFloat(params[1].split(",")[4]);
     let f = parseFloat(params[1].split(",")[5]);
 
-  runRapporSimulation(studyName, rapporPath,
-                      {filterSize: filterSize, numHashFunctions: numHashFunctions, cohorts: cohorts, f: f, p: p, q: q},
-                      Ci.nsICryptoHash.MD5, instance);
+    runRapporSimulation(studyName, rapporPath,
+                        {filterSize: filterSize, numHashFunctions: numHashFunctions, cohorts: cohorts, f: f, p: p, q: q},
+                        Ci.nsICryptoHash.MD5, instance);
   },
 }
 

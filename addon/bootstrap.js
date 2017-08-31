@@ -105,12 +105,7 @@ async function startup(addonData, reason) {
 
   let value = study.reportValue(studyConfig.studyName, studyConfig.isSimulation, studyConfig.rapporSimulatorPath);
 
-  if (studyConfig.isSimulation){
-    studyUtils.endStudy({reason: "simulation done"});
-    return;
-  }
-
-  if (!value) {
+  if (studyConfig.isSimulation || !value) {
     studyUtils.endStudy({reason: "ignored"});
     return;
   }
