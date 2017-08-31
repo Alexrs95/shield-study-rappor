@@ -11,17 +11,12 @@ const {classes:Cc, interfaces: Ci, utils: Cu} = Components;
 const EXPORTED_SYMBOLS = ["HomepageStudy"];
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Console.jsm");
-Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 
 const PREF_HOMEPAGE = "browser.startup.homepage";
 
-const TELEMETRY_RAPPOR_PATH = `chrome://shield-study-rappor/content/TelemetryRappor.jsm`;
-const { TelemetryRappor } = Cu.import(TELEMETRY_RAPPOR_PATH, {});
-
-const UTILS_PATH = `chrome://shield-study-rappor/content/Utils.jsm`;
-const { Utils } = Cu.import(UTILS_PATH, {});
+const RAPPOR_PATH = `chrome://shield-study-rappor/content/TelemetryRappor.jsm`;
+const { TelemetryRappor } = Cu.import(RAPPOR_PATH, {});
 
 const log = createLog("HomepageStudy", "Info");
 
@@ -76,80 +71,28 @@ function getHomepage() {
   return eTLD;
 }
 
-/**
- * Returns the correct parameters depending if it's a standalone execution or a simulation.
- * @param {boolean} isSimulation - Boolean indicating if the addon is run for a simulation.
- * @param {string} rapporPath  - Path of the RAPPOR simulator.
- * @param {string} instance - Instance of the simulation.
- */
-function getParams(isSimulation, rapporPath, instance) {
-  if (!isSimulation) {
-    return {filterSize: 16, numHashFunctions: 2, cohorts: 100, f: 0.0, p: 0.35, q: 0.65};
-  }
-
-  let params = Utils.read(new FileUtils.File(rapporPath + "_tmp/python/" + instance + "/case_params.csv"));
-  // In the file, the filterSize (k) value is in bits, but here we use bytes.
-  let filterSize = parseInt(params[1].split(",")[0], 10) / 8;
-  let numHashFunctions = parseInt(params[1].split(",")[1], 10);
-  let cohorts = parseInt(params[1].split(",")[2], 10);
-  let p = parseFloat(params[1].split(",")[3]);
-  let q = parseFloat(params[1].split(",")[4]);
-  let f = parseFloat(params[1].split(",")[5]);
-
-  return {filterSize: filterSize, numHashFunctions: numHashFunctions, cohorts: cohorts, f: f, p: p, q: q};
-}
-
-/**
- * Runs the simulation and writes the data into case_reports.csv.
- * For running the simulation, the true values from case_true_values.csv
- * are read, and RAPPOR is executed.
- * @param {string} studyName - Name of the study.
- * @param {string} rapporPath - Path where the RAPPOR simulator lives.
- * @param {object} params - Object containing the algorithm parameters.
- */
-function runRapporSimulation(studyName, rapporPath, params, instance) {
-  let data = Utils.read(new FileUtils.File(rapporPath + "_tmp/python/" + instance + "/1/case_true_values.csv"));
-  let caseReportsFile = new FileUtils.File(rapporPath + "_tmp/python/" + instance + "/1/case_reports.csv");
-  Utils.write(caseReportsFile, "client, cohort, bloom, prr, irr\n");
-  // iterate over each line of the file getting the
-  // client, cohort and value.
-  for (let i = 1; i < data.length; i++) {
-    let line = data[i].split(",");
-    let report = TelemetryRappor.createReport(studyName, line[2], params, true, line[1]);
-    Utils.write(caseReportsFile,
-      line[0] + ","+ line[1] + "," + Utils.convertToBin(report.bloom) + "," + Utils.convertToBin(report.prr) + "," + Utils.convertToBin(report.irr) + "\n");
-  }
-}
-
 var HomepageStudy = {
-/**
- * Returns the value encoded by RAPPOR or null if the homepage can't be obtained.
- * @param {string} studyName - Name of the study.
- * @param {boolean} isSimulation - Boolean indicating whether the execution is for a simulation.
- * @param {string} rapporPath - Path where the RAPPOR simulator is located.
- *
- * @returns the encoded value returned by RAPPOR or null if the eTLD+1 can't be obtained.
- */
-  reportValue(studyName, isSimulation, rapporPath) {
-    let instance = null;
-    if(isSimulation) {
-      instance = Utils.read(new FileUtils.File(rapporPath + "_tmp/python/test-instances.txt"))[0].split(" ")[0];
+  /**
+   * Returns the value encoded by RAPPOR or null if the homepage can't be obtained.
+   * The two last arguments are not used, but must be declared for consistence with Simulator.jsm
+   * @param {string} studyName - Name of the study.
+   * @param {boolean} isSimulation - Boolean indicating whether the execution is for a simulation.
+   * @param {string} rapporPath - Path where the RAPPOR simulator is located.
+   *
+   * @returns the encoded value returned by RAPPOR or null if the eTLD+1 can't be obtained.
+   */
+  reportValue(studyName, isSimulation = false, rapporPath = null) {
+    let eTLDHomepage = getHomepage();
+    if (!eTLDHomepage) {
+       return null;
     }
-    let params = getParams(isSimulation, rapporPath, instance);
-
-    if (isSimulation){
-      runRapporSimulation(studyName, rapporPath, params, instance);
-    } else {
-      let eTLDHomepage = getHomepage();
-      if (!eTLDHomepage) {
-        return null;
-      }
-      let report = TelemetryRappor.createReport(studyName, eTLDHomepage, params);
-      return {
-        report: report.irr,
-        cohort: report.cohort
-      }
-    }
-  },
+    let report = TelemetryRappor.createReport(studyName, eTLDHomepage,
+                                             {filterSize: 16, numHashFunctions: 2, cohorts: 100, f: 0.0, p: 0.35, q: 0.65},
+                                             Ci.nsICryptoHash.MD5);
+    return {
+      report: report.report,
+      cohort: report.cohort
+    };
+  }
 }
 

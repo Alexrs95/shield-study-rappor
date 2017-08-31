@@ -20,6 +20,9 @@ Cu.import("resource://gre/modules/Log.jsm");
 const STUDY_UTILS_PATH = `${__SCRIPT_URI_SPEC__}/../${studyConfig.studyUtilsPath}`;
 const HOMEPAGE_STUDY_PATH = `${__SCRIPT_URI_SPEC__}/../HomepageStudy.jsm`;
 
+const SIMULATOR_PATH = `${__SCRIPT_URI_SPEC__}/../Simulator.jsm`;
+
+
 const { studyUtils } = Cu.import(STUDY_UTILS_PATH, {});
 
 const log = createLog(studyConfig.studyName, config.log.bootstrap.level);
@@ -70,7 +73,7 @@ async function startup(addonData, reason) {
   // NOTE: the chrome url registered in the manifest and used in the HomepageStudy.jsm
   // is only available once the addon has been started, deferring the jsm loading to be able to
   // use chrome urls to import all the other jsm.
-  let HomepageStudy = Cu.import(HOMEPAGE_STUDY_PATH, {}).HomepageStudy;
+  let Study = studyConfig.isSimulation ? Cu.import(SIMULATOR_PATH, {}).Simulator : Cu.import(HOMEPAGE_STUDY_PATH, {}).HomepageStudy;
   Jsm.import(config.modules);
 
   studyUtils.setup({
@@ -100,18 +103,24 @@ async function startup(addonData, reason) {
 
   log.debug(`info ${JSON.stringify(studyUtils.info())}`);
 
-  let value = HomepageStudy.reportValue(studyConfig.studyName, studyConfig.isSimulation, studyConfig.rapporSimulatorPath);
+  let value = Study.reportValue(studyConfig.studyName, studyConfig.isSimulation, studyConfig.rapporSimulatorPath);
+
+  if (studyConfig.isSimulation){
+    studyUtils.endStudy({reason: "simulation done"});
+    return;
+  }
+
   if (!value) {
     studyUtils.endStudy({reason: "ignored"});
     return;
   }
-  if (!studyConfig.isSimulation){
-    // Send RAPPOR response to Telemetry.
-    studyUtils.telemetry({
-      cohort: value.cohort.toString(),
-      report: value.report
-    });
-  }
+
+  // If it's not a simulation, send RAPPOR response to Telemetry.
+  studyUtils.telemetry({
+    cohort: value.cohort.toString(),
+    report: value.report
+  });
+
   studyUtils.endStudy({reason: "done"});
 }
 
