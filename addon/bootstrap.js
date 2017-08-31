@@ -73,7 +73,9 @@ async function startup(addonData, reason) {
   // NOTE: the chrome url registered in the manifest and used in the HomepageStudy.jsm
   // is only available once the addon has been started, deferring the jsm loading to be able to
   // use chrome urls to import all the other jsm.
-  let Study = studyConfig.isSimulation ? Cu.import(SIMULATOR_PATH, {}).Simulator : Cu.import(HOMEPAGE_STUDY_PATH, {}).HomepageStudy;
+  let study = studyConfig.isSimulation
+    ? Cu.import(SIMULATOR_PATH, {}).Simulator
+    : Cu.import(HOMEPAGE_STUDY_PATH, {}).HomepageStudy;
   Jsm.import(config.modules);
 
   studyUtils.setup({
@@ -103,7 +105,7 @@ async function startup(addonData, reason) {
 
   log.debug(`info ${JSON.stringify(studyUtils.info())}`);
 
-  let value = Study.reportValue(studyConfig.studyName, studyConfig.isSimulation, studyConfig.rapporSimulatorPath);
+  let value = study.reportValue(studyConfig.studyName, studyConfig.isSimulation, studyConfig.rapporSimulatorPath);
 
   if (studyConfig.isSimulation){
     studyUtils.endStudy({reason: "simulation done"});

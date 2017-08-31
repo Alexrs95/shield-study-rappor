@@ -13,10 +13,10 @@ const EXPORTED_SYMBOLS = ["HomepageStudy"];
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 
-const PREF_HOMEPAGE = "browser.startup.homepage";
-
 const RAPPOR_PATH = `chrome://shield-study-rappor/content/TelemetryRappor.jsm`;
 const { TelemetryRappor } = Cu.import(RAPPOR_PATH, {});
+
+const PREF_HOMEPAGE = "browser.startup.homepage";
 
 const log = createLog("HomepageStudy", "Info");
 
@@ -74,25 +74,18 @@ function getHomepage() {
 var HomepageStudy = {
   /**
    * Returns the value encoded by RAPPOR or null if the homepage can't be obtained.
-   * The two last arguments are not used, but must be declared for consistence with Simulator.jsm
    * @param {string} studyName - Name of the study.
-   * @param {boolean} isSimulation - Boolean indicating whether the execution is for a simulation.
-   * @param {string} rapporPath - Path where the RAPPOR simulator is located.
    *
    * @returns the encoded value returned by RAPPOR or null if the eTLD+1 can't be obtained.
    */
   reportValue(studyName) {
     let eTLDHomepage = getHomepage();
     if (!eTLDHomepage) {
-       return null;
+      return null;
     }
-    let report = TelemetryRappor.createReport(studyName, eTLDHomepage,
-                                             {filterSize: 16, numHashFunctions: 2, cohorts: 100, f: 0.0, p: 0.35, q: 0.65},
-                                             Ci.nsICryptoHash.MD5);
-    return {
-      report: report.report,
-      cohort: report.cohort
-    };
+    return TelemetryRappor.createReport(studyName, eTLDHomepage,
+                                        {filterSize: 16, numHashFunctions: 2, cohorts: 100, f: 0.0, p: 0.35, q: 0.65},
+                                        Ci.nsICryptoHash.MD5);
   }
 }
 

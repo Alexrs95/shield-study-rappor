@@ -10,12 +10,8 @@ const {classes:Cc, interfaces: Ci, utils: Cu} = Components;
 
 const EXPORTED_SYMBOLS = ["Simulator"];
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Console.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
-
-const PREF_HOMEPAGE = "browser.startup.homepage";
 
 const TELEMETRY_RAPPOR_PATH = `chrome://shield-study-rappor/content/TelemetryRappor.jsm`;
 const { TelemetryRappor } = Cu.import(TELEMETRY_RAPPOR_PATH, {});
@@ -23,7 +19,7 @@ const { TelemetryRappor } = Cu.import(TELEMETRY_RAPPOR_PATH, {});
 const log = createLog("Simulator", "Info");
 
 /**
- * Create the logger
+ * Create the logger.
  * @param {string} name - Name to show in the logs.
  * @param {string} level - Log level.
  */
@@ -38,6 +34,11 @@ function createLog(name, level) {
  * Runs the simulation and writes the data into case_reports.csv.
  * For running the simulation, the true values from case_true_values.csv
  * are read, and RAPPOR is executed.
+ * The expected format of case_true_values.csv is {client, cohort, value}.
+ * It contains the true values used for the simulation, the client that submits
+ * the value and the cohort this client belongs to.
+ * The format of case_reports.csv is {client, cohort, bloom, prr, irr}. This values
+ * are needed to run the analysis.
  * @param {string} studyName - Name of the study.
  * @param {string} rapporPath - Path where the RAPPOR simulator lives.
  * @param {object} params - Object containing the algorithm parameters.\
@@ -48,13 +49,14 @@ function runRapporSimulation(studyName, rapporPath, params, method, instance) {
   let data = read(new FileUtils.File(rapporPath + "_tmp/python/" + instance + "/1/case_true_values.csv"));
   let caseReportsFile = new FileUtils.File(rapporPath + "_tmp/python/" + instance + "/1/case_reports.csv");
   write(caseReportsFile, "client, cohort, bloom, prr, irr\n");
-  // iterate over each line of the file getting the
-  // client, cohort and value.
+  // Iterate over each line of the file getting the client, cohort and value.
+  // Each line represents a candidate sample that will be used to test the rappor implementation.
   for (let i = 1; i < data.length; i++) {
     let line = data[i].split(",");
-    let report = TelemetryRappor.createReport(studyName, line[2], params, method, true, line[1]);
-    write(caseReportsFile,
-      line[0] + ","+ line[1] + "," + convertToBin(report.internalBloom) + "," + convertToBin(report.internalPrr) + "," + convertToBin(report.report) + "\n");
+    let report = TelemetryRappor.createReport(studyName, line[2], params, method, line[1]);
+    // The expected format is {client, cohort, bloom, prr, irr}.
+    write(caseReportsFile, line[0] + ","+ line[1] + "," + convertToBin(report.internalBloom) +
+          "," + convertToBin(report.internalPrr) + "," + convertToBin(report.report) + "\n");
   }
 }
 
@@ -79,11 +81,11 @@ function read(file) {
   return lines;
 }
 
-  /**
-   * Write in a CSV {client, cohort, bloom, prr, irr}.
-   * @param {nsIFile} file - File to write in.
-   * @param {string} data - String containing the client, cohort, bloom, prr and irr.
-   */
+/**
+ * Write in a CSV {client, cohort, bloom, prr, irr}.
+ * @param {nsIFile} file - File to write in.
+ * @param {string} data - String containing the client, cohort, bloom, prr and irr.
+ */
 function write(file, data) {
   // file is nsIFile, data is a string
   var foStream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
@@ -111,7 +113,6 @@ function convertToBin(hex) {
 }
 
 var Simulator = {
-
 /**
  * Returns the value encoded by RAPPOR or null if the homepage can't be obtained.
  * @param {string} studyName - Name of the study.

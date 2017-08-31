@@ -141,20 +141,20 @@ function makePRNG(seed) {
 
 /**
  * 
- * @param {constant} method  - Method used to encode. Supported: nsICryptoHash.MD5 and nsICryptoHash.SHA256
+ * @param {constant} hashingFunction  - Function used to encode. Supported: nsICryptoHash.MD5 and nsICryptoHash.SHA256
  * @param {string} value - Value to encode.
  * @param {integer} filterSize - Size of the bloom filter.
  * @param {integer} numHashFunctions - Number of hash functions.
  * @param {integer} cohort - Cohort.
  */
-function encode(method, value, filterSize, numHashFunctions, cohort) {
-  switch (method) {
+function encode(hashingFunction, value, filterSize, numHashFunctions, cohort) {
+  switch (hashingFunction) {
     case Ci.nsICryptoHash.MD5:
       return encodeMD5(value, filterSize, numHashFunctions, cohort);
     case Ci.nsICryptoHash.SHA256:
       return encodeSHA256(value, filterSize, numHashFunctions, cohort);
     default:
-      log.error("Unsuported encoding method: ", method);
+      log.error("Unsuported encoding function: ", hashingFunction);
       break;
   }
 }
@@ -345,12 +345,12 @@ function getRandomFloat() {
  * @param {integer} cohort - Number of cohorts to use.
  * @param {string} secret - Secret to generate the Permanent Randomized Response.
  * @param {string} name - Name of the experiment.
- * @param {constant} method  - Method used to encode. Supported: nsICryptoHash.MD5 and nsICryptoHash.SHA256
+ * @param {constant} hashingFunction  - Function used to encode. Supported: nsICryptoHash.MD5 and nsICryptoHash.SHA256
  */
-function createReport(value, filterSize, numHashFunctions, p, q, f, cohort, secret, name, method) {
+function createReport(value, filterSize, numHashFunctions, p, q, f, cohort, secret, name, hashingFunction) {
   // Instead of storing a permanent randomized response, we use a PRNG and a stored
   // secret to re-compute B' on the fly every time we send a report.
-  let bloomFilter = encode(method, value, filterSize, numHashFunctions, cohort);
+  let bloomFilter = encode(hashingFunction, value, filterSize, numHashFunctions, cohort);
   let prr = getPermanentRandomizedResponse(bloomFilter, f, secret, name);
   let irr = getInstantRandomizedResponse(prr, p, q);
   return {
@@ -408,7 +408,7 @@ var TelemetryRappor = {
    * Receives the parameters for RAPPOR and returns the Instantaneosu Randomized Response.
    * @param {string} name - Name of the experiment. Used to store the preferences.
    * @param {string} value v - Value to submit
-   * @param {constant} method  - Method used to encode. Supported: nsICryptoHash.MD5 and nsICryptoHash.SHA256
+   * @param {constant} hashingFunction  - Function used to encode. Supported: nsICryptoHash.MD5 and nsICryptoHash.SHA256
    * @param {Object} params - The parameters for the RAPPOR algorithm.
    * @param {integer} params.filterSize k - Size of the bloom filter in bytes.
    * @param {integer} params.numHashFunctions h - Number of hash functions.
@@ -421,10 +421,10 @@ var TelemetryRappor = {
    *
    * @return An object containing the cohort and the encoded value in hex.
    */
-  createReport(name, value, params, method, isSimulation = false, simulatedCohort = null) {
+  createReport(name, value, params, hashingFunction, simulatedCohort = null) {
     let secret = getSecret(name);
-    let cohort = isSimulation ? simulatedCohort : getCohort(name, params.cohorts);
-    let report = createReport(value, params.filterSize, params.numHashFunctions, params.p, params.q, params.f, cohort, secret, name, method);
+    let cohort = !simulatedCohort ? simulatedCohort : getCohort(name, params.cohorts);
+    let report = createReport(value, params.filterSize, params.numHashFunctions, params.p, params.q, params.f, cohort, secret, name, hashingFunction);
     return {
       internalBloom: bytesToHex(report.bloom),
       internalPrr: bytesToHex(report.prr),
