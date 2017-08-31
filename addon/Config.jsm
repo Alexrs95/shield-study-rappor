@@ -23,9 +23,9 @@ var config = {
       "name": "eTLD+1",
     },
     // True if the addon is run for a simulation.
-    "isSimulation": true,
+    "isSimulation": false,
     // Path containing the RAPPOR simulator.
-    "rapporSimulatorPath": "/Users/arodriguez/src/rappor/",
+    "rapporSimulatorPath": "",
     /** **endings**
       * - keys indicate the 'endStudy' even that opens these.
       * - urls should be static (data) or external, because they have to
