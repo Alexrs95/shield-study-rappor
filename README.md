@@ -20,7 +20,7 @@ preference and applies RAPPOR ([bug 1379195](https://bugzilla.mozilla.org/show_b
 It can fail if the host is an IP address or is empty when calling `Services.eTLD.getBaseDomain`.
 In such case, the study ends. For example, if the value stored in the preference is `foo.bar.com` 
 the addon applies RAPPOR to `bar.com` and then sends the anonymized bit field out.
-Other possiblity is that the user's homepage is `about:home` or other `about:` page.
+Other possibility is that the user's homepage is `about:home` or other `about:` page.
 In the case of `about:home`, this is the value we use. In the case of other `about:`
 page, the reported value is `about:pages`.
 
